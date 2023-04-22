@@ -1,5 +1,6 @@
 package org.thoughtcrime.securesms.preferences.appearance
 
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.SparseArray
@@ -17,6 +18,7 @@ import org.session.libsession.utilities.TextSecurePreferences.Companion.CLASSIC_
 import org.session.libsession.utilities.TextSecurePreferences.Companion.OCEAN_DARK
 import org.session.libsession.utilities.TextSecurePreferences.Companion.OCEAN_LIGHT
 import org.thoughtcrime.securesms.PassphraseRequiredActionBarActivity
+import org.thoughtcrime.securesms.conversation.v2.WindowUtil
 import org.thoughtcrime.securesms.util.ThemeState
 
 @AndroidEntryPoint
@@ -62,19 +64,19 @@ class AppearanceSettingsActivity: PassphraseRequiredActionBarActivity(), View.On
             val entry = accents[v]
             entry?.let { viewModel.setNewAccent(it) }
         } else if (v in themes) {
-            val currentBase = if (currentTheme?.theme == R.style.Classic_Dark || currentTheme?.theme == R.style.Classic_Light) R.style.Classic else R.style.Ocean
+            val currentBase = if (currentTheme?.theme == R.style.Classic_Dark || currentTheme?.theme == R.style.Classic_Light) R.style.Base_Classic else R.style.Base_Ocean
             val (mappedStyle, newBase) = when (v) {
-                binding.themeOptionClassicDark, binding.themeRadioClassicDark -> CLASSIC_DARK to R.style.Classic
-                binding.themeOptionClassicLight, binding.themeRadioClassicLight -> CLASSIC_LIGHT to R.style.Classic
-                binding.themeOptionOceanDark, binding.themeRadioOceanDark -> OCEAN_DARK to R.style.Ocean
-                binding.themeOptionOceanLight, binding.themeRadioOceanLight -> OCEAN_LIGHT to R.style.Ocean
+                binding.themeOptionClassicDark, binding.themeRadioClassicDark -> CLASSIC_DARK to R.style.Base_Classic
+                binding.themeOptionClassicLight, binding.themeRadioClassicLight -> CLASSIC_LIGHT to R.style.Base_Classic
+                binding.themeOptionOceanDark, binding.themeRadioOceanDark -> OCEAN_DARK to R.style.Base_Ocean
+                binding.themeOptionOceanLight, binding.themeRadioOceanLight -> OCEAN_LIGHT to R.style.Base_Ocean
                 else -> throw NullPointerException("Invalid style for view [$v]")
             }
             viewModel.setNewStyle(mappedStyle)
             if (currentBase != newBase) {
-                if (newBase == R.style.Ocean) {
+                if (newBase == R.style.Base_Ocean) {
                     viewModel.setNewAccent(R.style.PrimaryBlue)
-                } else if (newBase == R.style.Classic) {
+                } else if (newBase == R.style.Base_Classic) {
                     viewModel.setNewAccent(R.style.PrimaryGreen)
                 }
             }
@@ -148,6 +150,5 @@ class AppearanceSettingsActivity: PassphraseRequiredActionBarActivity(), View.On
                 }
             }
         }
-
     }
 }

@@ -298,21 +298,29 @@
         <item name="android:windowBackground">?colorPrimary</item>
     </style>
 
-    <style name="Classic">
+    <style name="Base">
+        <item name="sessionLogoTint">@color/classic_dark_6</item>
+
+        <item name="android:windowLightStatusBar">false</item>
         <item name="dividerVertical">?android:textColorTertiary</item>
         <item name="dividerHorizontal">?dividerVertical</item>
         <item name="message_received_background_color">#F2F2F2</item>
+        <item name="android:navigationBarColor">@color/compose_view_background</item>
+    </style>
+
+    <style name="Base.Classic">
         <item name="colorAccent">@color/classic_accent</item>
     </style>
 
-    <style name="Ocean">
-        <item name="dividerVertical">?android:textColorTertiary</item>
-        <item name="dividerHorizontal">?dividerVertical</item>
-        <item name="message_received_background_color">#F2F2F2</item>
+    <style name="Base.Classic.Light"/>
+
+    <style name="Base.Ocean">
         <item name="colorAccent">@color/ocean_accent</item>
     </style>
 
-    <style name="Classic.Dark">
+    <style name="Base.Ocean.Light"/>
+
+    <style name="Classic.Dark" parent="Base.Classic">
         <!-- Main styles -->
         <item name="sessionLogoTint">@color/classic_dark_6</item>
         <item name="colorPrimary">@color/classic_dark_0</item>
@@ -326,7 +334,6 @@
         <item name="android:textColor">?android:textColorPrimary</item>
         <item name="android:textColorHint">@color/gray27</item>
         <item name="android:windowBackground">?colorPrimary</item>
-        <item name="android:navigationBarColor">@color/compose_view_background</item>
         <item name="dialog_background_color">@color/classic_dark_1</item>
         <item name="bottomSheetDialogTheme">@style/Classic.Dark.BottomSheet</item>
         <item name="actionMenuTextColor">?android:textColorPrimary</item>
@@ -389,7 +396,9 @@
         <item name="message_selected">@color/classic_dark_2</item>
     </style>
 
-    <style name="Classic.Light">
+    <style name="Base.Overrides"/>
+
+    <style name="Classic.Light" parent="Base.Classic.Light">
         <!-- Main styles -->
         <item name="sessionLogoTint">@color/classic_light_0</item>
         <item name="colorPrimary">@color/classic_light_6</item>
@@ -404,7 +413,6 @@
         <item name="android:textColor">?android:textColorPrimary</item>
         <item name="android:textColorHint">@color/gray27</item>
         <item name="android:windowBackground">?colorPrimary</item>
-        <item name="android:navigationBarColor">?colorPrimary</item>
         <item name="colorCellBackground">@color/classic_light_6</item>
         <item name="colorSettingsBackground">@color/classic_light_5</item>
         <item name="colorDividerBackground">@color/classic_light_3</item>
@@ -423,8 +431,7 @@
         <item name="theme_type">light</item>
         <item name="android:colorBackgroundFloating">?colorPrimary</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="O_MR1">true</item>
-        <item name="android:isLightTheme" tools:targetApi="Q">true</item>
+        <item name="android:isLightTheme" tools:targetApi="29">true</item>
         <item name="android:statusBarColor">?colorPrimary</item>
 
         <!-- Home screen -->
@@ -475,7 +482,7 @@
 
     </style>
 
-    <style name="Ocean.Dark">
+    <style name="Ocean.Dark" parent="Base.Ocean">
         <!-- Main styles -->
         <item name="sessionLogoTint">@color/ocean_dark_7</item>
         <item name="colorPrimary">@color/ocean_dark_2</item>
@@ -490,7 +497,6 @@
         <item name="android:textColorHint">@color/ocean_dark_5</item>
         <item name="android:windowBackground">?colorPrimary</item>
         <item name="android:colorBackground">@color/default_background_start</item>
-        <item name="android:navigationBarColor">@color/compose_view_background</item>
         <item name="default_background_end">?colorPrimary</item>
         <item name="default_background_start">?colorPrimaryDark</item>
         <item name="colorCellBackground">@color/ocean_dark_3</item>
@@ -557,7 +563,7 @@
 
     </style>
 
-    <style name="Ocean.Light">
+    <style name="Ocean.Light" parent="Base.Ocean.Light">
         <!-- Main styles -->
         <item name="sessionLogoTint">@color/ocean_light_1</item>
         <item name="colorPrimary">@color/ocean_light_7</item>
@@ -570,7 +576,6 @@
         <item name="android:textColorTertiary">@color/ocean_light_2</item>
         <item name="android:textColor">?android:textColorPrimary</item>
         <item name="android:textColorHint">@color/ocean_light_6</item>
-        <item name="android:navigationBarColor">@color/ocean_light_7</item>
         <item name="android:windowBackground">?colorPrimary</item>
         <item name="android:colorBackground">@color/default_background_start</item>
         <item name="default_background_end">@color/ocean_light_7</item>
@@ -593,8 +598,7 @@
         <item name="theme_type">light</item>
         <item name="android:colorBackgroundFloating">?colorPrimary</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="O_MR1">true</item>
-        <item name="android:isLightTheme" tools:targetApi="Q">true</item>
+        <item name="android:isLightTheme" tools:targetApi="29">true</item>
         <item name="android:statusBarColor">?colorPrimary</item>
 
 
