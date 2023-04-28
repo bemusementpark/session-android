@@ -317,7 +317,7 @@ object MessageSender {
     }
 
     // Result Handling
-    fun handleSuccessfulMessageSend(message: Message, destination: Destination, isSyncMessage: Boolean = false, openGroupSentTimestamp: Long = -1) {
+    private fun handleSuccessfulMessageSend(message: Message, destination: Destination, isSyncMessage: Boolean = false, openGroupSentTimestamp: Long = -1) {
         val storage = MessagingModuleConfiguration.shared.storage
         val userPublicKey = storage.getUserPublicKey()!!
         // Ignore future self-sends
@@ -360,7 +360,7 @@ object MessageSender {
                 }
             }
             // Mark the message as sent
-            storage.markAsSent(message.sentTimestamp!!, userPublicKey)
+            storage.markAsSentAndSynced(message.sentTimestamp!!, userPublicKey)
             storage.markUnidentified(message.sentTimestamp!!, userPublicKey)
             // Start the disappearing messages timer if needed
             if (message is VisibleMessage && !isSyncMessage) {

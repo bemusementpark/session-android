@@ -107,7 +107,8 @@ interface StorageProtocol {
     fun getMessageIdInDatabase(timestamp: Long, author: String): Long? // TODO: This is a weird name
     fun updateSentTimestamp(messageID: Long, isMms: Boolean, openGroupSentTimestamp: Long, threadId: Long)
     fun markAsSending(timestamp: Long, author: String)
-    fun markAsSent(timestamp: Long, author: String)
+    fun markAsSyncing(timestamp: Long, author: String)
+    fun markAsSentAndSynced(timestamp: Long, author: String)
     fun markUnidentified(timestamp: Long, author: String)
     fun setErrorMessage(timestamp: Long, author: String, error: Exception)
     fun clearErrorMessage(messageID: Long)

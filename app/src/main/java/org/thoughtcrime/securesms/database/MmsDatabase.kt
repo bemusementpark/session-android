@@ -212,7 +212,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         }
     }
 
-    fun updateSentTimestamp(messageId: Long, newTimestamp: Long, threadId: Long) {
+    override fun updateSentTimestamp(messageId: Long, newTimestamp: Long, threadId: Long) {
         val db = databaseHelper.writableDatabase
         db.execSQL(
             "UPDATE $TABLE_NAME SET $DATE_SENT = ? WHERE $ID = ?",
@@ -307,44 +307,31 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
     }
 
     fun markAsPendingInsecureSmsFallback(messageId: Long) {
-        val threadId = getThreadIdForMessage(messageId)
-        updateMailboxBitmask(
-            messageId,
-            MmsSmsColumns.Types.BASE_TYPE_MASK,
-            MmsSmsColumns.Types.BASE_PENDING_INSECURE_SMS_FALLBACK,
-            Optional.of(threadId)
-        )
-        notifyConversationListeners(threadId)
+        markAs(messageId, MmsSmsColumns.Types.BASE_PENDING_INSECURE_SMS_FALLBACK)
     }
 
-    fun markAsSending(messageId: Long) {
-        val threadId = getThreadIdForMessage(messageId)
-        updateMailboxBitmask(
-            messageId,
-            MmsSmsColumns.Types.BASE_TYPE_MASK,
-            MmsSmsColumns.Types.BASE_SENDING_TYPE,
-            Optional.of(threadId)
-        )
-        notifyConversationListeners(threadId)
+    override fun markAsSending(messageId: Long) {
+        markAs(messageId, MmsSmsColumns.Types.BASE_SENDING_TYPE)
     }
 
-    fun markAsSentFailed(messageId: Long) {
-        val threadId = getThreadIdForMessage(messageId)
-        updateMailboxBitmask(
-            messageId,
-            MmsSmsColumns.Types.BASE_TYPE_MASK,
-            MmsSmsColumns.Types.BASE_SENT_FAILED_TYPE,
-            Optional.of(threadId)
-        )
-        notifyConversationListeners(threadId)
-    }
+    override fun markAsSentFailed(messageId: Long) =
+        markAs(messageId, MmsSmsColumns.Types.BASE_SENT_FAILED_TYPE)
 
-    override fun markAsSent(messageId: Long, secure: Boolean) {
+    override fun markAsSyncing(messageId: Long, secure: Boolean) =
+        markAs(messageId, MmsSmsColumns.Types.BASE_SYNCING_TYPE or if (secure) MmsSmsColumns.Types.PUSH_MESSAGE_BIT or MmsSmsColumns.Types.SECURE_MESSAGE_BIT else 0)
+
+    override fun markAsSyncFailed(messageId: Long, secure: Boolean) =
+        markAs(messageId, MmsSmsColumns.Types.BASE_SYNC_FAILED_TYPE or if (secure) MmsSmsColumns.Types.PUSH_MESSAGE_BIT or MmsSmsColumns.Types.SECURE_MESSAGE_BIT else 0)
+
+    override fun markAsSentAndSynced(messageId: Long, secure: Boolean) =
+        markAs(messageId, MmsSmsColumns.Types.BASE_SENT_AND_SYNCED_TYPE or if (secure) MmsSmsColumns.Types.PUSH_MESSAGE_BIT or MmsSmsColumns.Types.SECURE_MESSAGE_BIT else 0)
+
+    private fun markAs(messageId: Long, baseType: Long) {
         val threadId = getThreadIdForMessage(messageId)
         updateMailboxBitmask(
             messageId,
             MmsSmsColumns.Types.BASE_TYPE_MASK,
-            MmsSmsColumns.Types.BASE_SENT_TYPE or if (secure) MmsSmsColumns.Types.PUSH_MESSAGE_BIT or MmsSmsColumns.Types.SECURE_MESSAGE_BIT else 0,
+            baseType,
             Optional.of(threadId)
         )
         notifyConversationListeners(threadId)
@@ -737,7 +724,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         if (messageId == -1L) {
             return Optional.absent()
         }
-        markAsSent(messageId, true)
+        markAsSentAndSynced(messageId, true)
         return Optional.fromNullable(InsertResult(messageId, threadId))
     }
 
@@ -1160,25 +1147,6 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         } finally {
             cursor?.close()
         }
-    }
-
-    fun isSent(messageId: Long): Boolean {
-        val database = databaseHelper.readableDatabase
-        database!!.query(
-            TABLE_NAME,
-            arrayOf(MESSAGE_BOX),
-            "$ID = ?",
-            arrayOf<String?>(messageId.toString()),
-            null,
-            null,
-            null
-        ).use { cursor ->
-            if (cursor != null && cursor.moveToNext()) {
-                val type = cursor.getLong(cursor.getColumnIndexOrThrow(MESSAGE_BOX))
-                return MmsSmsColumns.Types.isSentType(type)
-            }
-        }
-        return false
     }
 
     /*package*/
