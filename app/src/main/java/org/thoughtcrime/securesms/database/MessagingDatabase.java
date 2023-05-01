@@ -200,6 +200,12 @@ public abstract class MessagingDatabase extends Database implements MmsSmsColumn
     db.update(getTableName(), contentValues, where, args);
   }
 
+  public abstract void updateSentTimestamp(long messageID, long openGroupSentTimestamp, long threadId);
+
+  public abstract void markAsSending(long id);
+
+  public abstract void markAsSentFailed(long id);
+
   public static class SyncMessageId {
 
     private final Address address;

@@ -56,6 +56,7 @@ import org.session.libsignal.utilities.Log
 import org.session.libsignal.utilities.ThreadUtils.queue
 import org.session.libsignal.utilities.guava.Optional
 import org.thoughtcrime.securesms.attachments.MmsNotificationAttachment
+import org.thoughtcrime.securesms.database.MmsSmsColumns.Types.*
 import org.thoughtcrime.securesms.database.SmsDatabase.InsertListener
 import org.thoughtcrime.securesms.database.helpers.SQLCipherOpenHelper
 import org.thoughtcrime.securesms.database.model.MediaMmsMessageRecord
@@ -212,7 +213,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         }
     }
 
-    fun updateSentTimestamp(messageId: Long, newTimestamp: Long, threadId: Long) {
+    override fun updateSentTimestamp(messageId: Long, newTimestamp: Long, threadId: Long) {
         val db = databaseHelper.writableDatabase
         db.execSQL(
             "UPDATE $TABLE_NAME SET $DATE_SENT = ? WHERE $ID = ?",
@@ -286,7 +287,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
     val expireStartedMessages: Reader
         get() {
             val where = "$EXPIRE_STARTED > 0"
-            return readerFor(rawQuery(where, null))!!
+            return readerFor(rawQuery(where, null))
         }
 
     private fun updateMailboxBitmask(
@@ -306,48 +307,26 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         }
     }
 
-    fun markAsPendingInsecureSmsFallback(messageId: Long) {
+    private fun markBaseType(messageId: Long, baseType: Long) {
         val threadId = getThreadIdForMessage(messageId)
         updateMailboxBitmask(
             messageId,
-            MmsSmsColumns.Types.BASE_TYPE_MASK,
-            MmsSmsColumns.Types.BASE_PENDING_INSECURE_SMS_FALLBACK,
+            BASE_TYPE_MASK,
+            baseType,
             Optional.of(threadId)
         )
         notifyConversationListeners(threadId)
     }
 
-    fun markAsSending(messageId: Long) {
-        val threadId = getThreadIdForMessage(messageId)
-        updateMailboxBitmask(
-            messageId,
-            MmsSmsColumns.Types.BASE_TYPE_MASK,
-            MmsSmsColumns.Types.BASE_SENDING_TYPE,
-            Optional.of(threadId)
-        )
-        notifyConversationListeners(threadId)
-    }
+    override fun markAsSending(messageId: Long) = markBaseType(messageId, BASE_SENDING_TYPE)
 
-    fun markAsSentFailed(messageId: Long) {
-        val threadId = getThreadIdForMessage(messageId)
-        updateMailboxBitmask(
-            messageId,
-            MmsSmsColumns.Types.BASE_TYPE_MASK,
-            MmsSmsColumns.Types.BASE_SENT_FAILED_TYPE,
-            Optional.of(threadId)
-        )
-        notifyConversationListeners(threadId)
-    }
+    override fun markAsSentFailed(messageId: Long) = markBaseType(messageId, BASE_SENT_FAILED_TYPE)
 
     override fun markAsSent(messageId: Long, secure: Boolean) {
-        val threadId = getThreadIdForMessage(messageId)
-        updateMailboxBitmask(
+        markBaseType(
             messageId,
-            MmsSmsColumns.Types.BASE_TYPE_MASK,
-            MmsSmsColumns.Types.BASE_SENT_TYPE or if (secure) MmsSmsColumns.Types.PUSH_MESSAGE_BIT or MmsSmsColumns.Types.SECURE_MESSAGE_BIT else 0,
-            Optional.of(threadId)
+            BASE_SENT_TYPE or if (secure) PUSH_MESSAGE_BIT or SECURE_MESSAGE_BIT else 0
         )
-        notifyConversationListeners(threadId)
     }
 
     override fun markUnidentified(messageId: Long, unidentified: Boolean) {
@@ -373,7 +352,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         }
         updateMailboxBitmask(
             messageId,
-            MmsSmsColumns.Types.BASE_TYPE_MASK,
+            BASE_TYPE_MASK,
             MmsSmsColumns.Types.BASE_DELETED_TYPE,
             Optional.of(threadId)
         )
@@ -750,9 +729,9 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         runIncrement: Boolean,
         runThreadUpdate: Boolean
     ): Optional<InsertResult> {
-        var type = MmsSmsColumns.Types.BASE_INBOX_TYPE or MmsSmsColumns.Types.SECURE_MESSAGE_BIT
+        var type = MmsSmsColumns.Types.BASE_INBOX_TYPE or SECURE_MESSAGE_BIT
         if (retrieved.isPushMessage) {
-            type = type or MmsSmsColumns.Types.PUSH_MESSAGE_BIT
+            type = type or PUSH_MESSAGE_BIT
         }
         if (retrieved.isExpirationUpdate) {
             type = type or MmsSmsColumns.Types.EXPIRATION_TIMER_UPDATE_BIT
@@ -778,9 +757,9 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         serverTimestamp: Long = 0,
         runThreadUpdate: Boolean
     ): Long {
-        var type = MmsSmsColumns.Types.BASE_SENDING_TYPE
+        var type = BASE_SENDING_TYPE
         if (message.isSecure) type =
-            type or (MmsSmsColumns.Types.SECURE_MESSAGE_BIT or MmsSmsColumns.Types.PUSH_MESSAGE_BIT)
+            type or (SECURE_MESSAGE_BIT or PUSH_MESSAGE_BIT)
         if (forceSms) type = type or MmsSmsColumns.Types.MESSAGE_FORCE_SMS_BIT
         if (message.isGroup && message is OutgoingGroupMediaMessage) {
             if (message.isUpdateMessage) type = type or MmsSmsColumns.Types.GROUP_UPDATE_MESSAGE_BIT
@@ -1221,7 +1200,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         try {
             val db = databaseHelper.readableDatabase
             var where =
-                THREAD_ID + " = ? AND (CASE (" + MESSAGE_BOX + " & " + MmsSmsColumns.Types.BASE_TYPE_MASK + ") "
+                THREAD_ID + " = ? AND (CASE (" + MESSAGE_BOX + " & " + BASE_TYPE_MASK + ") "
             for (outgoingType in MmsSmsColumns.Types.OUTGOING_MESSAGE_TYPES) {
                 where += " WHEN $outgoingType THEN $DATE_SENT < $date"
             }
