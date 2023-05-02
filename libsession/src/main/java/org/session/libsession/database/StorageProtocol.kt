@@ -108,7 +108,6 @@ interface StorageProtocol {
     fun updateSentTimestamp(messageID: Long, isMms: Boolean, openGroupSentTimestamp: Long, threadId: Long)
     fun markAsSending(timestamp: Long, author: String)
     fun markAsSentAndSynced(timestamp: Long, author: String)
-    fun markUnidentified(timestamp: Long, author: String)
     fun setError(timestamp: Long, author: String, error: Exception)
     fun clearError(messageID: Long)
     fun setMessageServerHash(messageID: Long, serverHash: String)

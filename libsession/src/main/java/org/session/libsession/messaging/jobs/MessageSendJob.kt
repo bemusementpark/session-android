@@ -26,11 +26,11 @@ class MessageSendJob(val message: Message, val destination: Destination) : Job {
 
     companion object {
         val TAG = MessageSendJob::class.simpleName
-        val KEY: String = "MessageSendJob"
+        const val KEY: String = "MessageSendJob"
 
         // Keys used for database storage
-        private val MESSAGE_KEY = "message"
-        private val DESTINATION_KEY = "destination"
+        private const val MESSAGE_KEY = "message"
+        private const val DESTINATION_KEY = "destination"
     }
 
     override fun execute(dispatcherName: String) {
@@ -134,9 +134,7 @@ class MessageSendJob(val message: Message, val destination: Destination) : Job {
             .build()
     }
 
-    override fun getFactoryKey(): String {
-        return KEY
-    }
+    override fun getFactoryKey(): String = KEY
 
     class Factory : Job.Factory<MessageSendJob> {
 
@@ -147,9 +145,8 @@ class MessageSendJob(val message: Message, val destination: Destination) : Job {
             kryo.isRegistrationRequired = false
             // Message
             val messageInput = Input(serializedMessage)
-            val message: Message
-            try {
-                message = kryo.readClassAndObject(messageInput) as Message
+            val message = try {
+                kryo.readClassAndObject(messageInput) as Message
             } catch (e: Exception) {
                 Log.e("Loki", "Couldn't deserialize message send job.", e)
                 return null
@@ -157,9 +154,8 @@ class MessageSendJob(val message: Message, val destination: Destination) : Job {
             messageInput.close()
             // Destination
             val destinationInput = Input(serializedDestination)
-            val destination: Destination
-            try {
-                destination = kryo.readClassAndObject(destinationInput) as Destination
+            val destination: Destination = try {
+                kryo.readClassAndObject(destinationInput) as Destination
             } catch (e: Exception) {
                 Log.e("Loki", "Couldn't deserialize message send job.", e)
                 return null

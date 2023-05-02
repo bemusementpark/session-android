@@ -294,13 +294,6 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         markAs(messageId, MmsSmsColumns.Types.BASE_SENT_AND_SYNCED_TYPE or if (secure) MmsSmsColumns.Types.PUSH_MESSAGE_BIT or MmsSmsColumns.Types.SECURE_MESSAGE_BIT else 0)
     }
 
-    override fun markUnidentified(messageId: Long, unidentified: Boolean) {
-        val contentValues = ContentValues()
-        contentValues.put(UNIDENTIFIED, if (unidentified) 1 else 0)
-        val db = databaseHelper.writableDatabase
-        db.update(TABLE_NAME, contentValues, ID_WHERE, arrayOf(messageId.toString()))
-    }
-
     override fun markAsDeleted(messageId: Long, read: Boolean, hasMention: Boolean) {
         val database = databaseHelper.writableDatabase
         val contentValues = ContentValues()

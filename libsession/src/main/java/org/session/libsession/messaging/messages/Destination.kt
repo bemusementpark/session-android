@@ -7,15 +7,9 @@ import org.session.libsignal.utilities.toHexString
 
 sealed class Destination {
 
-    class Contact(var publicKey: String) : Destination() {
-        internal constructor(): this("")
-    }
-    class ClosedGroup(var groupPublicKey: String) : Destination() {
-        internal constructor(): this("")
-    }
-    class LegacyOpenGroup(var roomToken: String, var server: String) : Destination() {
-        internal constructor(): this("", "")
-    }
+    data class Contact(var publicKey: String) : Destination()
+    data class ClosedGroup(var groupPublicKey: String) : Destination()
+    data class LegacyOpenGroup(var roomToken: String, var server: String) : Destination()
 
     class OpenGroup(
         var roomToken: String = "",

@@ -21,7 +21,12 @@ import org.session.libsignal.utilities.Log
 import org.session.libsignal.utilities.PushAttachmentData
 import org.session.libsignal.utilities.Util
 
-class AttachmentUploadJob(val attachmentID: Long, val threadID: String, val message: Message, val messageSendJobID: String) : Job {
+class AttachmentUploadJob(
+    val attachmentID: Long,
+    val threadID: String,
+    val message: Message,
+    private val messageSendJobID: String
+): Job {
     override var delegate: JobDelegate? = null
     override var id: String? = null
     override var failureCount: Int = 0
@@ -36,13 +41,13 @@ class AttachmentUploadJob(val attachmentID: Long, val threadID: String, val mess
 
     companion object {
         val TAG = AttachmentUploadJob::class.simpleName
-        val KEY: String = "AttachmentUploadJob"
+        const val KEY: String = "AttachmentUploadJob"
 
         // Keys used for database storage
-        private val ATTACHMENT_ID_KEY = "attachment_id"
-        private val THREAD_ID_KEY = "thread_id"
-        private val MESSAGE_KEY = "message"
-        private val MESSAGE_SEND_JOB_ID_KEY = "message_send_job_id"
+        private const val ATTACHMENT_ID_KEY = "attachment_id"
+        private const val THREAD_ID_KEY = "thread_id"
+        private const val MESSAGE_KEY = "message"
+        private const val MESSAGE_SEND_JOB_ID_KEY = "message_send_job_id"
     }
 
     override fun execute(dispatcherName: String) {
@@ -53,22 +58,15 @@ class AttachmentUploadJob(val attachmentID: Long, val threadID: String, val mess
                 ?: return handleFailure(dispatcherName, Error.NoAttachment)
             val openGroup = storage.getOpenGroup(threadID.toLong())
             if (openGroup != null) {
-                val keyAndResult = upload(attachment, openGroup.server, false) {
+                upload(attachment, openGroup.server, false) {
                     OpenGroupApi.upload(it, openGroup.room, openGroup.server)
                 }
-                handleSuccess(dispatcherName, attachment, keyAndResult.first, keyAndResult.second)
             } else {
-                val keyAndResult = upload(attachment, FileServerApi.server, true) {
-                    FileServerApi.upload(it)
-                }
-                handleSuccess(dispatcherName, attachment, keyAndResult.first, keyAndResult.second)
-            }
-        } catch (e: java.lang.Exception) {
-            if (e == Error.NoAttachment) {
-                this.handlePermanentFailure(dispatcherName, e)
-            } else {
-                this.handleFailure(dispatcherName, e)
-            }
+                upload(attachment, FileServerApi.server, true, FileServerApi::upload)
+            }.let { (key, result) -> handleSuccess(dispatcherName, attachment, key, result) }
+        } catch (e: Exception) {
+            if (e == Error.NoAttachment) this.handlePermanentFailure(dispatcherName, e)
+            else this.handleFailure(dispatcherName, e)
         }
     }
 
@@ -162,10 +160,9 @@ class AttachmentUploadJob(val attachmentID: Long, val threadID: String, val mess
     private fun failAssociatedMessageSendJob(e: Exception) {
         val storage = MessagingModuleConfiguration.shared.storage
         val messageSendJob = storage.getMessageSendJob(messageSendJobID)
-        MessageSender.handleFailedMessageSend(this.message, e)
-        if (messageSendJob != null) {
-            storage.markJobAsFailedPermanently(messageSendJobID)
-        }
+        MessageSender.handleFailedMessageSend(message, e, isSyncMessage = false)
+
+        if (messageSendJob != null) storage.markJobAsFailedPermanently(messageSendJobID)
     }
 
     override fun serialize(): Data {
@@ -183,9 +180,7 @@ class AttachmentUploadJob(val attachmentID: Long, val threadID: String, val mess
             .build()
     }
 
-    override fun getFactoryKey(): String {
-        return KEY
-    }
+    override fun getFactoryKey(): String = KEY
 
     class Factory: Job.Factory<AttachmentUploadJob> {
 
@@ -194,9 +189,9 @@ class AttachmentUploadJob(val attachmentID: Long, val threadID: String, val mess
             val kryo = Kryo()
             kryo.isRegistrationRequired = false
             val input = Input(serializedMessage)
-            val message: Message
-            try {
-                message = kryo.readClassAndObject(input) as Message
+
+            val message: Message = try {
+                kryo.readClassAndObject(input) as Message
             } catch (e: Exception) {
                 Log.e("Loki","Couldn't serialize the AttachmentUploadJob", e)
                 return null

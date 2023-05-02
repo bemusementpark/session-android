@@ -214,15 +214,6 @@ public class SmsDatabase extends MessagingDatabase {
   }
 
   @Override
-  public void markUnidentified(long id, boolean unidentified) {
-    ContentValues contentValues = new ContentValues(1);
-    contentValues.put(UNIDENTIFIED, unidentified ? 1 : 0);
-
-    SQLiteDatabase db = databaseHelper.getWritableDatabase();
-    db.update(TABLE_NAME, contentValues, ID_WHERE, new String[] {String.valueOf(id)});
-  }
-
-  @Override
   public void markAsDeleted(long messageId, boolean read, boolean hasMention) {
     SQLiteDatabase database     = databaseHelper.getWritableDatabase();
     ContentValues contentValues = new ContentValues();

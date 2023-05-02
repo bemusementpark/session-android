@@ -360,11 +360,6 @@ class Storage(context: Context, helper: SQLCipherOpenHelper) : Database(context,
             ?.let { getMmsDatabaseElseSms(it.isMms).markAsSending(it.id) }
     }
 
-    override fun markUnidentified(timestamp: Long, author: String) {
-        mmsSmsDatabase.getMessageFor(timestamp, author)
-            ?.let { getMmsDatabaseElseSms(it.isMms).markUnidentified(it.id, true) }
-    }
-
     override fun setError(timestamp: Long, author: String, error: Exception) {
         val messageRecord = mmsSmsDatabase.getMessageFor(timestamp, author) ?: return
         getMmsDatabaseElseSms(messageRecord.isMms).markAsSentFailed(messageRecord.id)
