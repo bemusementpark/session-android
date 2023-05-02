@@ -153,14 +153,6 @@ public interface MmsSmsColumns {
       return (type & BASE_TYPE_MASK) == BASE_PENDING_SECURE_SMS_FALLBACK;
     }
 
-    public static boolean isPendingInsecureSmsFallbackType(long type) {
-      return (type & BASE_TYPE_MASK) == BASE_PENDING_INSECURE_SMS_FALLBACK;
-    }
-
-    public static boolean isInboxType(long type) {
-      return (type & BASE_TYPE_MASK) == BASE_INBOX_TYPE;
-    }
-
     public static boolean isDeletedMessage(long type) { return (type & BASE_TYPE_MASK) == BASE_DELETED_TYPE; }
 
     public static boolean isJoinedType(long type) {
@@ -179,32 +171,12 @@ public interface MmsSmsColumns {
       return (type & END_SESSION_BIT) != 0;
     }
 
-    public static boolean isKeyExchangeType(long type) {
-      return (type & KEY_EXCHANGE_BIT) != 0;
-    }
-
     public static boolean isIdentityVerified(long type) {
       return (type & KEY_EXCHANGE_IDENTITY_VERIFIED_BIT) != 0;
     }
 
     public static boolean isIdentityDefault(long type) {
       return (type & KEY_EXCHANGE_IDENTITY_DEFAULT_BIT) != 0;
-    }
-
-    public static boolean isCorruptedKeyExchange(long type) {
-      return (type & KEY_EXCHANGE_CORRUPTED_BIT) != 0;
-    }
-
-    public static boolean isInvalidVersionKeyExchange(long type) {
-      return (type & KEY_EXCHANGE_INVALID_VERSION_BIT) != 0;
-    }
-
-    public static boolean isBundleKeyExchange(long type) {
-      return (type & KEY_EXCHANGE_BUNDLE_BIT) != 0;
-    }
-
-    public static boolean isContentBundleKeyExchange(long type) {
-      return (type & KEY_EXCHANGE_CONTENT_FORMAT) != 0;
     }
 
     public static boolean isIdentityUpdate(long type) {
@@ -248,15 +220,8 @@ public interface MmsSmsColumns {
       return (type & BASE_TYPE_MASK) == FIRST_MISSED_CALL_TYPE;
     }
 
-
-    public static boolean isGroupUpdate(long type) {
-      return (type & GROUP_UPDATE_BIT) != 0;
-    }
-
-    public static boolean isGroupUpdateMessage(long type) { return (type & GROUP_UPDATE_MESSAGE_BIT) != 0; }
-
-    public static boolean isGroupQuit(long type) {
-      return (type & GROUP_QUIT_BIT) != 0;
+    public static boolean isGroupUpdateMessage(long type) {
+      return (type & GROUP_UPDATE_MESSAGE_BIT) != 0;
     }
 
     public static boolean isFailedDecryptType(long type) {
@@ -267,20 +232,8 @@ public interface MmsSmsColumns {
       return (type & ENCRYPTION_REMOTE_DUPLICATE_BIT) != 0;
     }
 
-    public static boolean isDecryptInProgressType(long type) {
-      return (type & 0x40000000) != 0; // Inline deprecated asymmetric encryption type
-    }
-
     public static boolean isNoRemoteSessionType(long type) {
       return (type & ENCRYPTION_REMOTE_NO_SESSION_BIT) != 0;
-    }
-
-    public static boolean isLokiSessionRestoreSentType(long type) {
-      return (type & ENCRYPTION_LOKI_SESSION_RESTORE_SENT_BIT) != 0;
-    }
-
-    public static boolean isLokiSessionRestoreDoneType(long type) {
-      return (type & ENCRYPTION_LOKI_SESSION_RESTORE_DONE_BIT) != 0;
     }
 
     public static boolean isLegacyType(long type) {
@@ -291,21 +244,5 @@ public interface MmsSmsColumns {
     public static boolean isMessageRequestResponse(long type) {
       return (type & MESSAGE_REQUEST_RESPONSE_BIT) != 0;
     }
-
-    public static long translateFromSystemBaseType(long theirType) {
-
-      switch ((int)theirType) {
-        case 1: return BASE_INBOX_TYPE;
-        case 2: return BASE_SENT_TYPE;
-        case 3: return BASE_DRAFT_TYPE;
-        case 4: return BASE_OUTBOX_TYPE;
-        case 5: return BASE_SENT_FAILED_TYPE;
-        case 6: return BASE_OUTBOX_TYPE;
-      }
-
-      return BASE_INBOX_TYPE;
-    }
   }
-
-
 }
