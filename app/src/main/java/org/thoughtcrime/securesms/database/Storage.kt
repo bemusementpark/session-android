@@ -19,6 +19,7 @@ import org.session.libsession.messaging.messages.visible.VisibleMessage
 import org.session.libsession.messaging.open_groups.GroupMember
 import org.session.libsession.messaging.open_groups.OpenGroup
 import org.session.libsession.messaging.open_groups.OpenGroupApi
+import org.session.libsession.messaging.sending_receiving.MessageSender
 import org.session.libsession.messaging.sending_receiving.attachments.AttachmentId
 import org.session.libsession.messaging.sending_receiving.attachments.DatabaseAttachment
 import org.session.libsession.messaging.sending_receiving.data_extraction.DataExtractionNotificationInfoMessage
@@ -247,12 +248,11 @@ class Storage(context: Context, helper: SQLCipherOpenHelper) : Database(context,
         lokiAPIDatabase.setAuthToken(id, null)
     }
 
-    override fun getOpenGroup(threadId: Long): OpenGroup? {
-        if (threadId < 0) { return null }
-        return databaseHelper.readableDatabase.get(LokiThreadDatabase.publicChatTable, "${LokiThreadDatabase.threadID} = ?", arrayOf( threadId.toString() )) { cursor ->
-            val publicChatAsJson = cursor.getString(LokiThreadDatabase.publicChat)
-            OpenGroup.fromJSON(publicChatAsJson)
-        }
+    override fun getOpenGroup(threadId: Long): OpenGroup? =
+        if (threadId < 0) null
+    else databaseHelper.readableDatabase.get(LokiThreadDatabase.publicChatTable, "${LokiThreadDatabase.threadID} = ?", arrayOf( threadId.toString() )) { cursor ->
+        val publicChatAsJson = cursor.getString(LokiThreadDatabase.publicChat)
+        OpenGroup.fromJSON(publicChatAsJson)
     }
 
     override fun getOpenGroupPublicKey(server: String): String? =
@@ -340,9 +340,19 @@ class Storage(context: Context, helper: SQLCipherOpenHelper) : Database(context,
         getMmsDatabaseElseSms(isMms).updateSentTimestamp(messageID, openGroupSentTimestamp, threadId)
     }
 
-    override fun markAsSent(timestamp: Long, author: String) {
+    override fun markAsSentAndSynced(timestamp: Long, author: String) {
         mmsSmsDatabase.getMessageFor(timestamp, author)
-            ?.let { getMmsDatabaseElseSms(it.isMms).markAsSent(it.id, true) }
+            ?.let { getMmsDatabaseElseSms(it.isMms).markAsSentAndSynced(it.id, true) }
+    }
+
+    override fun markAsSyncing(timestamp: Long, author: String) {
+        mmsSmsDatabase.getMessageFor(timestamp, author)
+            ?.let { getMmsDatabaseElseSms(it.isMms).markAsSyncing(it.id) }
+    }
+
+    override fun markAsSyncFailed(timestamp: Long, author: String) {
+        mmsSmsDatabase.getMessageFor(timestamp, author)
+            ?.let { getMmsDatabaseElseSms(it.isMms).markAsSyncFailed(it.id) }
     }
 
     override fun markAsSending(timestamp: Long, author: String) {
@@ -355,7 +365,7 @@ class Storage(context: Context, helper: SQLCipherOpenHelper) : Database(context,
             ?.let { getMmsDatabaseElseSms(it.isMms).markUnidentified(it.id, true) }
     }
 
-    override fun setErrorMessage(timestamp: Long, author: String, error: Exception) {
+    override fun setError(timestamp: Long, author: String, error: Exception) {
         val messageRecord = mmsSmsDatabase.getMessageFor(timestamp, author) ?: return
         getMmsDatabaseElseSms(messageRecord.isMms).markAsSentFailed(messageRecord.id)
 
@@ -370,7 +380,7 @@ class Storage(context: Context, helper: SQLCipherOpenHelper) : Database(context,
         }.let { lokiMessageDatabase.setErrorMessage(messageRecord.id, it) }
     }
 
-    override fun clearErrorMessage(messageID: Long) {
+    override fun clearError(messageID: Long) {
         lokiMessageDatabase.clearErrorMessage(messageID)
     }
 
@@ -422,7 +432,7 @@ class Storage(context: Context, helper: SQLCipherOpenHelper) : Database(context,
         val infoMessage = OutgoingGroupMediaMessage(recipient, updateData, groupID, null, sentTimestamp, 0, true, null, listOf(), listOf())
         if (mmsSmsDatabase.getMessageFor(sentTimestamp, userPublicKey) != null) return
         val infoMessageID = mmsDatabase.insertMessageOutbox(infoMessage, threadID, false, null, runThreadUpdate = true)
-        mmsDatabase.markAsSent(infoMessageID, true)
+        mmsDatabase.markAsSentAndSynced(infoMessageID, true)
     }
 
     override fun isClosedGroup(publicKey: String): Boolean {

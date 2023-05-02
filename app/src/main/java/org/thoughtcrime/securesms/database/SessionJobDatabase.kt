@@ -59,15 +59,10 @@ class SessionJobDatabase(context: Context, helper: SQLCipherOpenHelper) : Databa
         }.toMap()
     }
 
-    fun getAttachmentUploadJob(attachmentID: Long): AttachmentUploadJob? {
-        val database = databaseHelper.readableDatabase
-        val result = mutableListOf<AttachmentUploadJob>()
-        database.getAll(sessionJobTable, "$jobType = ?", arrayOf( AttachmentUploadJob.KEY )) { cursor ->
-            val job = jobFromCursor(cursor) as AttachmentUploadJob?
-            if (job != null) { result.add(job) }
-        }
-        return result.firstOrNull { job -> job.attachmentID == attachmentID }
-    }
+    fun getAttachmentUploadJob(attachmentID: Long): AttachmentUploadJob? =
+        databaseHelper.readableDatabase.getAll(sessionJobTable, "$jobType = ?", arrayOf( AttachmentUploadJob.KEY )) { cursor ->
+            jobFromCursor(cursor) as AttachmentUploadJob?
+        }.firstOrNull { it?.attachmentID == attachmentID }
 
     fun getMessageSendJob(messageSendJobID: String): MessageSendJob? {
         val database = databaseHelper.readableDatabase
