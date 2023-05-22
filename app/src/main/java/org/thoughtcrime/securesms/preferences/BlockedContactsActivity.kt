@@ -70,7 +70,11 @@ class BlockedContactsActivity: PassphraseRequiredActionBarActivity(), View.OnCli
         binding = ActivityBlockedContactsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.recyclerView.adapter = adapter
+        binding.composeView.setContent {
+
+        }
+
+//        binding.recyclerView.adapter = adapter
 
         viewModel.subscribe(this)
             .observe(this) { newState ->
