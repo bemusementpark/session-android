@@ -20,6 +20,10 @@
             android:layout_height="wrap_content"
             android:text="@string/activity_appearance_themes_category"/>
 
+        <AppearanceItemView>
+
+        </AppearanceItemView>
+
         <LinearLayout
             android:id="@+id/theme_option_classic_dark"
             android:background="@drawable/preference_top"
@@ -44,6 +48,8 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"/>
             <RadioButton
+                android:clickable="false"
+                android:focusable="false"
                 android:id="@+id/theme_radio_classic_dark"
                 android:layout_gravity="center"
                 android:layout_margin="@dimen/small_spacing"
@@ -74,6 +80,8 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"/>
             <RadioButton
+                android:clickable="false"
+                android:focusable="false"
                 android:id="@+id/theme_radio_classic_light"
                 android:layout_gravity="center"
                 android:layout_margin="@dimen/small_spacing"
@@ -104,6 +112,8 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"/>
             <RadioButton
+                android:clickable="false"
+                android:focusable="false"
                 android:id="@+id/theme_radio_ocean_dark"
                 android:layout_gravity="center"
                 android:layout_margin="@dimen/small_spacing"
@@ -135,6 +145,8 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"/>
             <RadioButton
+                android:clickable="false"
+                android:focusable="false"
                 android:id="@+id/theme_radio_ocean_light"
                 android:layout_gravity="center"
                 android:layout_margin="@dimen/small_spacing"

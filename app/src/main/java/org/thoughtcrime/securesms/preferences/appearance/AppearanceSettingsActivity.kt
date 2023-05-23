@@ -45,13 +45,9 @@ class AppearanceSettingsActivity: PassphraseRequiredActionBarActivity(), View.On
     private val themeViews
         get() = listOf(
             binding.themeOptionClassicDark,
-            binding.themeRadioClassicDark,
             binding.themeOptionClassicLight,
-            binding.themeRadioClassicLight,
             binding.themeOptionOceanDark,
-            binding.themeRadioOceanDark,
             binding.themeOptionOceanLight,
-            binding.themeRadioOceanLight
         )
 
     override fun onClick(v: View?) {
@@ -64,10 +60,10 @@ class AppearanceSettingsActivity: PassphraseRequiredActionBarActivity(), View.On
         } else if (v in themes) {
             val currentBase = if (currentTheme?.theme == R.style.Classic_Dark || currentTheme?.theme == R.style.Classic_Light) R.style.Classic else R.style.Ocean
             val (mappedStyle, newBase) = when (v) {
-                binding.themeOptionClassicDark, binding.themeRadioClassicDark -> CLASSIC_DARK to R.style.Classic
-                binding.themeOptionClassicLight, binding.themeRadioClassicLight -> CLASSIC_LIGHT to R.style.Classic
-                binding.themeOptionOceanDark, binding.themeRadioOceanDark -> OCEAN_DARK to R.style.Ocean
-                binding.themeOptionOceanLight, binding.themeRadioOceanLight -> OCEAN_LIGHT to R.style.Ocean
+                binding.themeOptionClassicDark -> CLASSIC_DARK to R.style.Classic
+                binding.themeOptionClassicLight -> CLASSIC_LIGHT to R.style.Classic
+                binding.themeOptionOceanDark -> OCEAN_DARK to R.style.Ocean
+                binding.themeOptionOceanLight -> OCEAN_LIGHT to R.style.Ocean
                 else -> throw NullPointerException("Invalid style for view [$v]")
             }
             viewModel.setNewStyle(mappedStyle)
@@ -91,14 +87,10 @@ class AppearanceSettingsActivity: PassphraseRequiredActionBarActivity(), View.On
     }
 
     private fun updateSelectedTheme(themeStyle: Int) {
-        mapOf(
-            R.style.Classic_Dark to binding.themeRadioClassicDark,
-            R.style.Classic_Light to binding.themeRadioClassicLight,
-            R.style.Ocean_Dark to binding.themeRadioOceanDark,
-            R.style.Ocean_Light to binding.themeRadioOceanLight
-        ).forEach { (style, view) ->
-            view.isChecked = themeStyle == style
-        }
+        binding.themeRadioClassicDark.isChecked = R.style.Classic_Dark == themeStyle
+        binding.themeRadioClassicLight.isChecked = R.style.Classic_Light == themeStyle
+        binding.themeRadioOceanDark.isChecked = R.style.Ocean_Dark == themeStyle
+        binding.themeRadioOceanLight.isChecked = R.style.Ocean_Light == themeStyle
     }
 
     private fun updateSelectedAccent(accentStyle: Int) {
