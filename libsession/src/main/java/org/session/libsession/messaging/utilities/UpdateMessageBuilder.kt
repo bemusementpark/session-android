@@ -11,24 +11,23 @@ import org.session.libsession.utilities.ExpirationUtil
 object UpdateMessageBuilder {
 
     fun buildGroupUpdateMessage(context: Context, updateMessageData: UpdateMessageData, sender: String? = null, isOutgoing: Boolean = false): String {
-        var message = ""
-        val updateData = updateMessageData.kind ?: return message
-        if (!isOutgoing && sender == null) return message
+        val updateData = updateMessageData.kind ?: return ""
+        if (!isOutgoing && sender == null) return ""
         val storage = MessagingModuleConfiguration.shared.storage
         val senderName: String = if (!isOutgoing) {
             storage.getContactWithSessionID(sender!!)?.displayName(Contact.ContactContext.REGULAR) ?: sender
         } else { context.getString(R.string.MessageRecord_you) }
 
-        when (updateData) {
+        return when (updateData) {
             is UpdateMessageData.Kind.GroupCreation -> {
-                message = if (isOutgoing) {
+                if (isOutgoing) {
                     context.getString(R.string.MessageRecord_you_created_a_new_group)
                 } else {
                     context.getString(R.string.MessageRecord_s_added_you_to_the_group, senderName)
                 }
             }
             is UpdateMessageData.Kind.GroupNameChange -> {
-                message = if (isOutgoing) {
+                if (isOutgoing) {
                     context.getString(R.string.MessageRecord_you_renamed_the_group_to_s, updateData.name)
                 } else {
                     context.getString(R.string.MessageRecord_s_renamed_the_group_to_s, senderName, updateData.name)
@@ -38,7 +37,7 @@ object UpdateMessageBuilder {
                 val members = updateData.updatedMembers.joinToString(", ") {
                     storage.getContactWithSessionID(it)?.displayName(Contact.ContactContext.REGULAR) ?: it
                 }
-                message = if (isOutgoing) {
+                if (isOutgoing) {
                     context.getString(R.string.MessageRecord_you_added_s_to_the_group, members)
                 } else {
                     context.getString(R.string.MessageRecord_s_added_s_to_the_group, senderName, members)
@@ -48,7 +47,7 @@ object UpdateMessageBuilder {
                 val storage = MessagingModuleConfiguration.shared.storage
                 val userPublicKey = storage.getUserPublicKey()!!
                 // 1st case: you are part of the removed members
-                message = if (userPublicKey in updateData.updatedMembers) {
+                if (userPublicKey in updateData.updatedMembers) {
                     if (isOutgoing) {
                         context.getString(R.string.MessageRecord_left_group)
                     } else {
@@ -67,14 +66,14 @@ object UpdateMessageBuilder {
                 }
             }
             is UpdateMessageData.Kind.GroupMemberLeft -> {
-                message = if (isOutgoing) {
+                if (isOutgoing) {
                     context.getString(R.string.MessageRecord_left_group)
                 } else {
                     context.getString(R.string.ConversationItem_group_action_left, senderName)
                 }
             }
+            else -> ""
         }
-        return message
     }
 
     fun buildExpirationTimerMessage(context: Context, duration: Long, sender: String? = null, isOutgoing: Boolean = false): String {

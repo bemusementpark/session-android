@@ -255,11 +255,11 @@ class WebRtcCallActivity : PassphraseRequiredActionBarActivity() {
                                 wantsToAnswer = false
                             }
                         }
-                        CALL_OUTGOING -> {
-                        }
+                        CALL_OUTGOING -> {}
                         CALL_CONNECTED -> {
                             wantsToAnswer = false
                         }
+                        else -> {}
                     }
                     updateControls(state)
                 }

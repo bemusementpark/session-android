@@ -68,7 +68,7 @@ object ConversationMenuHelper {
             if (thread.expireMessages > 0) {
                 inflater.inflate(R.menu.menu_conversation_expiration_on, menu)
                 val item = menu.findItem(R.id.menu_expiring_messages)
-                val actionView = item.actionView
+                val actionView = item.actionView!!
                 val iconView = actionView.findViewById<ImageView>(R.id.menu_badge_icon)
                 val badgeView = actionView.findViewById<TextView>(R.id.expiration_badge)
                 @ColorInt val color = context.getColorFromAttr(android.R.attr.textColorPrimary)
