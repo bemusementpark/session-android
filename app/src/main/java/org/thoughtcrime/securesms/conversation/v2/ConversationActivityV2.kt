@@ -1113,11 +1113,11 @@ class ConversationActivityV2 : PassphraseRequiredActionBarActivity(), InputBarDe
             }
 
         })
-        val topLeft = intArrayOf(0, 0).also { visibleMessageView.messageContentView.getLocationInWindow(it) }
+        val (x, y) = intArrayOf(0, 0).also { visibleMessageView.messageContentView.getLocationInWindow(it) }
         val selectedConversationModel = SelectedConversationModel(
             messageContentBitmap,
-            topLeft[0].toFloat(),
-            topLeft[1].toFloat(),
+            x.toFloat(),
+            y.toFloat(),
             visibleMessageView.messageContentView.width,
             message.isOutgoing,
             visibleMessageView.messageContentView

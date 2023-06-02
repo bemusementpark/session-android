@@ -7,6 +7,7 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
@@ -18,6 +19,7 @@ import android.view.Window;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -34,6 +36,7 @@ import org.session.libsession.messaging.open_groups.OpenGroup;
 import org.session.libsession.utilities.TextSecurePreferences;
 import org.session.libsession.utilities.ThemeUtil;
 import org.session.libsession.utilities.recipients.Recipient;
+import org.session.libsignal.utilities.Log;
 import org.thoughtcrime.securesms.components.emoji.EmojiImageView;
 import org.thoughtcrime.securesms.components.emoji.RecentEmojiPageModel;
 import org.thoughtcrime.securesms.components.menu.ActionItem;
@@ -55,6 +58,7 @@ import network.loki.messenger.R;
 
 public final class ConversationReactionOverlay extends FrameLayout {
 
+  private static final String TAG = "ConversationReactionOverlay";
   public  static final float LONG_PRESS_SCALE_FACTOR    = 0.95f;
   private static final Interpolator INTERPOLATOR = new DecelerateInterpolator();
 
@@ -175,8 +179,9 @@ public final class ConversationReactionOverlay extends FrameLayout {
 
     boolean isMessageOnLeft = selectedConversationModel.isOutgoing() ^ ViewUtil.isLtr(this);
 
-    conversationItem.setScaleX(LONG_PRESS_SCALE_FACTOR);
-    conversationItem.setScaleY(LONG_PRESS_SCALE_FACTOR);
+    float scale = selectedConversationModel.getBubbleWidth() / (float) conversationItemSnapshot.getWidth();
+    conversationItem.setScaleX(LONG_PRESS_SCALE_FACTOR * scale);
+    conversationItem.setScaleY(LONG_PRESS_SCALE_FACTOR * scale);
 
     setVisibility(View.INVISIBLE);
 
@@ -203,8 +208,10 @@ public final class ConversationReactionOverlay extends FrameLayout {
                                boolean isMessageOnLeft) {
     contextMenu = new ConversationContextMenu(dropdownAnchor, getMenuActionItems(messageRecord));
 
+    int bubbleWidth   = selectedConversationModel.getBubbleWidth();
+
     float endX = isMessageOnLeft ? scrubberHorizontalMargin :
-            selectedConversationModel.getBubbleX() - conversationItem.getWidth() + selectedConversationModel.getBubbleWidth();
+            selectedConversationModel.getBubbleX() - conversationItem.getWidth() + bubbleWidth;
     float endY = selectedConversationModel.getBubbleY() - statusBarHeight;
     conversationItem.setX(endX);
     conversationItem.setY(endY);
@@ -213,7 +220,6 @@ public final class ConversationReactionOverlay extends FrameLayout {
     boolean isWideLayout             = contextMenu.getMaxWidth() + scrubberWidth < getWidth();
 
     int overlayHeight = getHeight();
-    int bubbleWidth   = selectedConversationModel.getBubbleWidth();
 
     float endApparentTop  = endY;
     float endScale        = 1f;
@@ -225,20 +231,27 @@ public final class ConversationReactionOverlay extends FrameLayout {
     float reactionBarBackgroundY;
 
     if (isWideLayout) {
+      Log.i(TAG, "isWideLayout");
       boolean everythingFitsVertically = reactionBarHeight + menuPadding + reactionBarTopPadding + conversationItemSnapshot.getHeight() < overlayHeight;
       if (everythingFitsVertically) {
+        Log.i(TAG, "isWideLayout - everythingFitsVertically");
         boolean reactionBarFitsAboveItem = conversationItem.getY() > reactionBarHeight + menuPadding + reactionBarTopPadding;
 
         if (reactionBarFitsAboveItem) {
+          Log.i(TAG, "isWideLayout - everythingFitsVertically - reactionBarFitsAboveItem");
           reactionBarBackgroundY = conversationItem.getY() - menuPadding - reactionBarHeight;
         } else {
+          Log.i(TAG, "isWideLayout - everythingFitsVertically !reactionBarFitsAboveItem");
           endY                   = reactionBarHeight + menuPadding + reactionBarTopPadding;
           reactionBarBackgroundY = reactionBarTopPadding;
         }
       } else {
+        Log.i(TAG, "isWideLayout !everythingFitsVertically");
         float spaceAvailableForItem = overlayHeight - reactionBarHeight - menuPadding - reactionBarTopPadding;
 
-        endScale               = spaceAvailableForItem / conversationItem.getHeight();
+        Log.i(TAG, "conversationItemSnapshot.getHeight() " + conversationItemSnapshot.getHeight());
+
+        endScale               = spaceAvailableForItem / conversationItemSnapshot.getHeight();
         endX                  += Util.halfOffsetFromScale(conversationItemSnapshot.getWidth(), endScale) * (isMessageOnLeft ? -1 : 1);
         endY                   = reactionBarHeight + menuPadding + reactionBarTopPadding - Util.halfOffsetFromScale(conversationItemSnapshot.getHeight(), endScale);
         reactionBarBackgroundY = reactionBarTopPadding;
@@ -249,58 +262,78 @@ public final class ConversationReactionOverlay extends FrameLayout {
       boolean everythingFitsVertically = contextMenu.getMaxHeight() + conversationItemSnapshot.getHeight() + menuPadding + spaceForReactionBar < overlayHeight;
 
       if (everythingFitsVertically) {
+        Log.i(TAG, "everythingFitsVertically");
         float   bubbleBottom      = selectedConversationModel.getBubbleY() + conversationItemSnapshot.getHeight();
         boolean menuFitsBelowItem = bubbleBottom + menuPadding + contextMenu.getMaxHeight() <= overlayHeight + statusBarHeight;
 
         if (menuFitsBelowItem) {
+          Log.i(TAG, "everythingFitsVertically menuFitsBelowItem");
           if (conversationItem.getY() < 0) {
+            Log.i(TAG, "conversationItem.getY() < 0");
             endY = 0;
           }
-          float contextMenuTop = endY + conversationItemSnapshot.getHeight();
+          float bubbleHeight = bubbleWidth / (float) conversationItemSnapshot.getWidth() * conversationItemSnapshot.getHeight();
+          float contextMenuTop = endY + bubbleHeight;
           reactionBarBackgroundY = getReactionBarOffsetForTouch(selectedConversationModel.getBubbleY(), contextMenuTop, menuPadding, reactionBarOffset, reactionBarHeight, reactionBarTopPadding, endY);
 
           if (reactionBarBackgroundY <= reactionBarTopPadding) {
+            Log.i(TAG, "reactionBarBackgroundY <= reactionBarTopPadding");
             endY = backgroundView.getHeight() + menuPadding + reactionBarTopPadding;
           }
         } else {
+          Log.i(TAG, "everythingFitsVertically !menuFitsBelowItem");
           endY = overlayHeight - contextMenu.getMaxHeight() - menuPadding - conversationItemSnapshot.getHeight();
           reactionBarBackgroundY = endY - reactionBarHeight - menuPadding;
         }
 
         endApparentTop = endY;
       } else if (reactionBarOffset + reactionBarHeight + contextMenu.getMaxHeight() + menuPadding < overlayHeight) {
+        Log.i(TAG, "!everythingFitsVertically && reactionBarOffset + reactionBarHeight + contextMenu.getMaxHeight() + menuPadding < overlayHeight");
         float spaceAvailableForItem = (float) overlayHeight - contextMenu.getMaxHeight() - menuPadding - spaceForReactionBar;
+
+        Log.i(TAG, "overlayHeight " + overlayHeight);
+        Log.i(TAG, "contextMenu.getMaxHeight() " + contextMenu.getMaxHeight());
+        Log.i(TAG, "menuPadding " + menuPadding);
+        Log.i(TAG, "spaceForReactionBar " + spaceForReactionBar);
+        Log.i(TAG, "spaceAvailableForItem " + spaceAvailableForItem);
 
         endScale = spaceAvailableForItem / conversationItemSnapshot.getHeight();
         endX    += Util.halfOffsetFromScale(conversationItemSnapshot.getWidth(), endScale) * (isMessageOnLeft ? -1 : 1);
         endY     = spaceForReactionBar - Util.halfOffsetFromScale(conversationItemSnapshot.getHeight(), endScale);
+        endY     = spaceForReactionBar;
 
         float contextMenuTop = endY + (conversationItemSnapshot.getHeight() * endScale);
-        reactionBarBackgroundY = reactionBarTopPadding;//getReactionBarOffsetForTouch(selectedConversationModel.getBubbleY(), contextMenuTop + Util.halfOffsetFromScale(conversationItemSnapshot.getHeight(), endScale), menuPadding, reactionBarOffset, reactionBarHeight, reactionBarTopPadding, endY);
+        reactionBarBackgroundY = reactionBarTopPadding;getReactionBarOffsetForTouch(selectedConversationModel.getBubbleY(), contextMenuTop + Util.halfOffsetFromScale(conversationItemSnapshot.getHeight(), endScale), menuPadding, reactionBarOffset, reactionBarHeight, reactionBarTopPadding, endY);
         endApparentTop         = endY + Util.halfOffsetFromScale(conversationItemSnapshot.getHeight(), endScale);
       } else {
+        Log.i(TAG, "!everythingFitsVertically && ! (reactionBarOffset + reactionBarHeight + contextMenu.getMaxHeight() + menuPadding < overlayHeight)");
         contextMenu.setHeight(contextMenu.getMaxHeight() / 2);
 
         int     menuHeight     = contextMenu.getHeight();
-        boolean fitsVertically = menuHeight + conversationItem.getHeight() + menuPadding * 2 + reactionBarHeight + reactionBarTopPadding < overlayHeight;
+        boolean fitsVertically = menuHeight + conversationItemSnapshot.getHeight() + menuPadding * 2 + reactionBarHeight + reactionBarTopPadding < overlayHeight;
 
         if (fitsVertically) {
+          Log.i(TAG, "fitsVertically");
           float   bubbleBottom      = selectedConversationModel.getBubbleY() + conversationItemSnapshot.getHeight();
           boolean menuFitsBelowItem = bubbleBottom + menuPadding + menuHeight <= overlayHeight + statusBarHeight;
 
           if (menuFitsBelowItem) {
+            Log.i(TAG, "menuFitsBelowItem");
             reactionBarBackgroundY = conversationItem.getY() - menuPadding - reactionBarHeight;
 
             if (reactionBarBackgroundY < reactionBarTopPadding) {
+              Log.i(TAG, "reactionBarBackgroundY < reactionBarTopPadding");
               endY                   = reactionBarTopPadding + reactionBarHeight + menuPadding;
               reactionBarBackgroundY = reactionBarTopPadding;
             }
           } else {
+            Log.i(TAG, "!(reactionBarBackgroundY < reactionBarTopPadding)");
             endY                   = overlayHeight - menuHeight - menuPadding - conversationItemSnapshot.getHeight();
             reactionBarBackgroundY = endY - reactionBarHeight - menuPadding;
           }
           endApparentTop         = endY;
         } else {
+          Log.i(TAG, "!fitsVertically");
           float spaceAvailableForItem = (float) overlayHeight - menuHeight - menuPadding * 2 - reactionBarHeight - reactionBarTopPadding;
 
           endScale               = spaceAvailableForItem / conversationItemSnapshot.getHeight();
@@ -350,6 +383,8 @@ public final class ConversationReactionOverlay extends FrameLayout {
     }
 
     int revealDuration = getContext().getResources().getInteger(R.integer.reaction_scrubber_reveal_duration);
+
+    Log.i(TAG, "endX " + endX + " endY " + endY + " endScale " + endScale);
 
     conversationItem.animate()
             .x(endX)

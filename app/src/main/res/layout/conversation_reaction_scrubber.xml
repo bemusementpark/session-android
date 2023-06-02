@@ -23,6 +23,7 @@
         android:orientation="horizontal">
 
          <View
+             android:scaleType="fitEnd"
             android:id="@+id/conversation_item_bubble"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
