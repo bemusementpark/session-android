@@ -24,11 +24,11 @@ import org.thoughtcrime.securesms.util.DateUtils
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
+import kotlin.math.max
 
 @AndroidEntryPoint
 class MessageDetailActivity: PassphraseRequiredActionBarActivity() {
     private lateinit var binding: ActivityMessageDetailBinding
-    var messageRecord: MessageRecord? = null
 
     @Inject
     lateinit var storage: Storage
@@ -49,11 +49,11 @@ class MessageDetailActivity: PassphraseRequiredActionBarActivity() {
         // We only show this screen for messages fail to send,
         // so the author of the messages must be the current user.
         val author = Address.fromSerialized(TextSecurePreferences.getLocalNumber(this)!!)
-        messageRecord = DatabaseComponent.get(this).mmsSmsDatabase().getMessageFor(timestamp, author) ?: run {
+        val messageRecord = DatabaseComponent.get(this).mmsSmsDatabase().getMessageFor(timestamp, author) ?: run {
             finish()
             return
         }
-        val threadId = messageRecord!!.threadId
+        val threadId = messageRecord.threadId
         val openGroup = storage.getOpenGroup(threadId)
         val blindedKey = openGroup?.let { group ->
             val userEdKeyPair = MessagingModuleConfiguration.shared.getUserED25519KeyPair() ?: return@let null
@@ -63,36 +63,31 @@ class MessageDetailActivity: PassphraseRequiredActionBarActivity() {
                     ?.let { SessionId(IdPrefix.BLINDED, it) }?.hexString
             } else null
         }
-        updateContent()
+        updateContent(messageRecord)
         binding.resendButton.setOnClickListener {
-            ResendMessageUtilities.resend(this, messageRecord!!, blindedKey)
+            ResendMessageUtilities.resend(this, messageRecord, blindedKey)
             finish()
         }
     }
 
-    fun updateContent() {
+    private fun updateContent(messageRecord: MessageRecord) {
         val dateLocale = Locale.getDefault()
         val dateFormatter: SimpleDateFormat = DateUtils.getDetailedDateFormatter(this, dateLocale)
-        binding.sentTime.text = dateFormatter.format(Date(messageRecord!!.dateSent))
+        binding.sentTime.text = dateFormatter.format(Date(messageRecord.dateSent))
 
-        val errorMessage = DatabaseComponent.get(this).lokiMessageDatabase().getErrorMessage(messageRecord!!.getId())
-        if (errorMessage != null) {
-            binding.errorMessage.text = errorMessage
-            binding.resendContainer.isVisible = true
-            binding.errorContainer.isVisible = true
-        } else {
-            binding.errorContainer.isVisible = false
-            binding.resendContainer.isVisible = false
-        }
+        val errorMessage = DatabaseComponent.get(this).lokiMessageDatabase().getErrorMessage(messageRecord.getId())
+        binding.errorMessage.text = errorMessage
+        binding.resendContainer.isVisible = errorMessage != null
+        binding.errorContainer.isVisible = errorMessage != null
 
-        if (messageRecord!!.expiresIn <= 0 || messageRecord!!.expireStarted <= 0) {
+        if (messageRecord.expiresIn <= 0 || messageRecord.expireStarted <= 0) {
             binding.expiresContainer.visibility = View.GONE
         } else {
             binding.expiresContainer.visibility = View.VISIBLE
-            val elapsed = SnodeAPI.nowWithOffset - messageRecord!!.expireStarted
-            val remaining = messageRecord!!.expiresIn - elapsed
+            val elapsed = SnodeAPI.nowWithOffset - messageRecord.expireStarted
+            val remaining = messageRecord.expiresIn - elapsed
 
-            val duration = ExpirationUtil.getExpirationDisplayValue(this, Math.max((remaining / 1000).toInt(), 1))
+            val duration = ExpirationUtil.getExpirationDisplayValue(this, max((remaining / 1000).toInt(), 1))
             binding.expiresIn.text = duration
         }
     }
