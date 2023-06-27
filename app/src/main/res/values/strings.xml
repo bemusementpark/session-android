@@ -504,7 +504,7 @@
     <!-- media_overview_activity -->
     <string name="media_overview_activity__no_media">No media</string>
     <!-- message_recipients_list_item -->
-    <string name="message_recipients_list_item__resend">RESEND</string>
+    <string name="message_recipients_list_item__resend">Resend</string>
     <!-- recipient_preferences -->
     <string name="recipient_preferences__block">Block</string>
     <!-- message_details_header -->
@@ -623,7 +623,7 @@
     <!-- contact_selection_list -->
     <string name="contact_selection_list__unknown_contact">New message to...</string>
     <!-- conversation_context -->
-    <string name="conversation_context__menu_message_details">Message details</string>
+    <string name="conversation_context__menu_message_details">Message Info</string>
     <string name="conversation_context__menu_copy_text">Copy text</string>
     <string name="conversation_context__menu_delete_message">Delete message</string>
     <string name="conversation_context__menu_ban_user">Ban user</string>

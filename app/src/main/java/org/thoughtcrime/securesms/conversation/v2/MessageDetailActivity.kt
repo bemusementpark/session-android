@@ -77,13 +77,12 @@ class MessageDetailActivity: PassphraseRequiredActionBarActivity() {
 
         val errorMessage = DatabaseComponent.get(this).lokiMessageDatabase().getErrorMessage(messageRecord.getId())
         binding.errorMessage.text = errorMessage
-        binding.resendContainer.isVisible = errorMessage != null
-        binding.errorContainer.isVisible = errorMessage != null
 
-        if (messageRecord.expiresIn <= 0 || messageRecord.expireStarted <= 0) {
-            binding.expiresContainer.visibility = View.GONE
-        } else {
-            binding.expiresContainer.visibility = View.VISIBLE
+        val disappearing = messageRecord.expiresIn > 0 && messageRecord.expireStarted > 0
+
+        binding.expiresIn.isVisible = disappearing
+
+        if (disappearing) {
             val elapsed = SnodeAPI.nowWithOffset - messageRecord.expireStarted
             val remaining = messageRecord.expiresIn - elapsed
 
