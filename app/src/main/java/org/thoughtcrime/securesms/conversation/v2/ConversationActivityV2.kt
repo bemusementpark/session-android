@@ -1424,7 +1424,7 @@ class ConversationActivityV2 : PassphraseRequiredActionBarActivity(), InputBarDe
         ApplicationContext.getInstance(this).typingStatusSender.onTypingStopped(viewModel.threadId)
     }
 
-    private fun sendAttachments(attachments: List<Attachment>, body: String?, quotedMessage: MessageRecord? = null, linkPreview: LinkPreview? = null) {
+    private fun sendAttachments(attachments: List<Attachment>, body: String?, quotedMessage: MessageRecord? = binding?.inputBar?.quote, linkPreview: LinkPreview? = null) {
         val recipient = viewModel.recipient ?: return
         processMessageRequestApproval()
         // Create the message
