@@ -75,7 +75,6 @@
             android:layout_width="@dimen/very_small_profile_picture_size"
             android:layout_height="@dimen/very_small_profile_picture_size"
             android:layout_gravity="center"
-            app:layout_constraintEnd_toStartOf="@+id/messageInnerContainer"
             app:layout_constraintBottom_toBottomOf="@id/messageInnerContainer"
             app:layout_constraintStart_toStartOf="parent"
             tools:visibility="visible" />
@@ -109,7 +108,7 @@
 
         <LinearLayout
             android:id="@+id/messageInnerContainer"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/profilePictureView"
             app:layout_constraintHorizontal_bias="1.0"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
