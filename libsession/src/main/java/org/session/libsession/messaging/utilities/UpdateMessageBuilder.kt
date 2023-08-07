@@ -9,6 +9,7 @@ import org.session.libsession.messaging.calls.CallMessageType.CALL_INCOMING
 import org.session.libsession.messaging.calls.CallMessageType.CALL_MISSED
 import org.session.libsession.messaging.calls.CallMessageType.CALL_OUTGOING
 import org.session.libsession.messaging.contacts.Contact
+import org.session.libsession.messaging.contacts.Contact.ContactContext.REGULAR
 import org.session.libsession.messaging.sending_receiving.data_extraction.DataExtractionNotificationInfoMessage
 import org.session.libsession.utilities.ExpirationUtil
 import org.session.libsession.utilities.truncateIdForDisplay
@@ -16,11 +17,16 @@ import org.session.libsession.utilities.truncateIdForDisplay
 object UpdateMessageBuilder {
     val storage = MessagingModuleConfiguration.shared.storage
 
-    fun getSenderName(senderId: String) = storage.getContactWithSessionID(senderId)
-        ?.displayName(Contact.ContactContext.REGULAR)
-        ?: truncateIdForDisplay(senderId)
+    private fun getSenderName(senderId: String) =
+        storage.getContactWithSessionID(senderId)?.displayName(REGULAR)
+            ?: truncateIdForDisplay(senderId)
 
-    fun buildGroupUpdateMessage(context: Context, updateMessageData: UpdateMessageData, senderId: String? = null, isOutgoing: Boolean = false): String {
+    fun buildGroupUpdateMessage(
+        context: Context,
+        updateMessageData: UpdateMessageData,
+        senderId: String? = null,
+        isOutgoing: Boolean = false
+    ): String {
         val senderName: String = when {
             isOutgoing -> context.getString(R.string.MessageRecord_you)
             else -> getSenderName(senderId ?: return "")
@@ -66,36 +72,36 @@ object UpdateMessageBuilder {
     }
 
     fun buildExpirationTimerMessage(context: Context, duration: Long, senderId: String? = null, isOutgoing: Boolean = false): String {
-        if (!isOutgoing && senderId == null) return ""
-        val senderName: String = if (!isOutgoing) {
-            getSenderName(senderId!!)
-        } else { context.getString(R.string.MessageRecord_you) }
-        return if (duration <= 0) {
-            if (isOutgoing) context.getString(R.string.MessageRecord_you_disabled_disappearing_messages)
-            else context.getString(R.string.MessageRecord_s_disabled_disappearing_messages, senderName)
+        fun time() = ExpirationUtil.getExpirationDisplayValue(context, duration.toInt())
+
+        return if (isOutgoing) when {
+            duration <= 0 -> context.getString(R.string.MessageRecord_you_disabled_disappearing_messages)
+            else -> context.getString(R.string.MessageRecord_you_set_disappearing_message_time_to_s, time())
         } else {
-            val time = ExpirationUtil.getExpirationDisplayValue(context, duration.toInt())
-            if (isOutgoing)context.getString(R.string.MessageRecord_you_set_disappearing_message_time_to_s, time)
-            else context.getString(R.string.MessageRecord_s_set_disappearing_message_time_to_s, senderName, time)
+            val senderName = getSenderName(senderId ?: return "")
+            if (duration <= 0) context.getString(R.string.MessageRecord_s_disabled_disappearing_messages, senderName)
+            else context.getString(R.string.MessageRecord_s_set_disappearing_message_time_to_s, senderName, time())
         }
     }
 
-    fun buildDataExtractionMessage(context: Context, kind: DataExtractionNotificationInfoMessage.Kind, senderId: String? = null): String {
-        val senderName = getSenderName(senderId!!)
-        return when (kind) {
-            DataExtractionNotificationInfoMessage.Kind.SCREENSHOT ->
-                context.getString(R.string.MessageRecord_s_took_a_screenshot, senderName)
-            DataExtractionNotificationInfoMessage.Kind.MEDIA_SAVED ->
-                context.getString(R.string.MessageRecord_media_saved_by_s, senderName)
-        }
-    }
+    fun buildDataExtractionMessage(
+        context: Context,
+        kind: DataExtractionNotificationInfoMessage.Kind,
+        senderId: String? = null
+    ): String = when (kind) {
+        DataExtractionNotificationInfoMessage.Kind.SCREENSHOT -> R.string.MessageRecord_s_took_a_screenshot
+        DataExtractionNotificationInfoMessage.Kind.MEDIA_SAVED -> R.string.MessageRecord_media_saved_by_s
+    }.let { context.getString(it, getSenderName(senderId!!)) }
 
-    fun buildCallMessage(context: Context, type: CallMessageType, sender: String): String =
-        when (type) {
-            CALL_INCOMING -> R.string.MessageRecord_s_called_you
-            CALL_OUTGOING -> R.string.MessageRecord_called_s
-            CALL_MISSED, CALL_FIRST_MISSED -> R.string.MessageRecord_missed_call_from
-        }.let {
-            context.getString(it, storage.getContactWithSessionID(sender)?.displayName(Contact.ContactContext.REGULAR) ?: sender)
-        }
+    fun buildCallMessage(
+        context: Context,
+        type: CallMessageType,
+        sender: String
+    ): String = when (type) {
+        CALL_INCOMING -> R.string.MessageRecord_s_called_you
+        CALL_OUTGOING -> R.string.MessageRecord_called_s
+        CALL_MISSED, CALL_FIRST_MISSED -> R.string.MessageRecord_missed_call_from
+    }.let {
+        context.getString(it, storage.getContactWithSessionID(sender)?.displayName(REGULAR) ?: sender)
+    }
 }

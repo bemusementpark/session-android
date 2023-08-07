@@ -85,13 +85,12 @@ class SettingsActivity : PassphraseRequiredActionBarActivity() {
         super.onCreate(savedInstanceState, isReady)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val displayName = getDisplayName()
         glide = GlideApp.with(this)
         with(binding) {
             setupProfilePictureView(profilePictureView)
             profilePictureView.setOnClickListener { showEditProfilePictureUI() }
             ctnGroupNameSection.setOnClickListener { startActionMode(DisplayNameEditActionModeCallback()) }
-            btnGroupNameDisplay.text = displayName
+            btnGroupNameDisplay.text = getDisplayName()
             publicKeyTextView.text = hexEncodedPublicKey
             copyButton.setOnClickListener { copyPublicKey() }
             shareButton.setOnClickListener { sharePublicKey() }
@@ -111,8 +110,7 @@ class SettingsActivity : PassphraseRequiredActionBarActivity() {
     }
 
     private fun getDisplayName(): String =
-        TextSecurePreferences.getProfileName(this)
-            ?.let(::maybeTruncateIdForDisplay)
+        TextSecurePreferences.getProfileName(this)?.let(::maybeTruncateIdForDisplay)
             ?: truncateIdForDisplay(hexEncodedPublicKey)
 
     private fun setupProfilePictureView(view: ProfilePictureView) {
