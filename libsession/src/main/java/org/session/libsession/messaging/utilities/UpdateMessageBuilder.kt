@@ -21,53 +21,45 @@ object UpdateMessageBuilder {
         ?: truncateIdForDisplay(senderId)
 
     fun buildGroupUpdateMessage(context: Context, updateMessageData: UpdateMessageData, senderId: String? = null, isOutgoing: Boolean = false): String {
-        val updateData = updateMessageData.kind
-        if (updateData == null || !isOutgoing && senderId == null) return ""
-        val senderName: String = if (isOutgoing) context.getString(R.string.MessageRecord_you)
-        else getSenderName(senderId!!)
+        val senderName: String = when {
+            isOutgoing -> context.getString(R.string.MessageRecord_you)
+            else -> getSenderName(senderId ?: return "")
+        }
 
-        return when (updateData) {
-            is UpdateMessageData.Kind.GroupCreation -> if (isOutgoing) {
-                context.getString(R.string.MessageRecord_you_created_a_new_group)
-            } else {
-                context.getString(R.string.MessageRecord_s_added_you_to_the_group, senderName)
+        return when (val updateData = updateMessageData.kind) {
+            is UpdateMessageData.Kind.GroupCreation -> when {
+                isOutgoing -> context.getString(R.string.MessageRecord_you_created_a_new_group)
+                else -> context.getString(R.string.MessageRecord_s_added_you_to_the_group, senderName)
             }
-            is UpdateMessageData.Kind.GroupNameChange -> if (isOutgoing) {
-                context.getString(R.string.MessageRecord_you_renamed_the_group_to_s, updateData.name)
-            } else {
-                context.getString(R.string.MessageRecord_s_renamed_the_group_to_s, senderName, updateData.name)
+            is UpdateMessageData.Kind.GroupNameChange -> when {
+                isOutgoing -> context.getString(R.string.MessageRecord_you_renamed_the_group_to_s, updateData.name)
+                else -> context.getString(R.string.MessageRecord_s_renamed_the_group_to_s, senderName, updateData.name)
             }
             is UpdateMessageData.Kind.GroupMemberAdded -> {
                 val members = updateData.updatedMembers.joinToString(", ", transform = ::getSenderName)
-                if (isOutgoing) {
-                    context.getString(R.string.MessageRecord_you_added_s_to_the_group, members)
-                } else {
-                    context.getString(R.string.MessageRecord_s_added_s_to_the_group, senderName, members)
+                when {
+                    isOutgoing -> context.getString(R.string.MessageRecord_you_added_s_to_the_group, members)
+                    else -> context.getString(R.string.MessageRecord_s_added_s_to_the_group, senderName, members)
                 }
             }
-            is UpdateMessageData.Kind.GroupMemberRemoved -> {
-                val userPublicKey = storage.getUserPublicKey()!!
-                // 1st case: you are part of the removed members
-                return if (userPublicKey in updateData.updatedMembers) {
-                    if (isOutgoing) {
-                        context.getString(R.string.MessageRecord_left_group)
-                    } else {
-                        context.getString(R.string.MessageRecord_you_were_removed_from_the_group)
+            is UpdateMessageData.Kind.GroupMemberRemoved ->
+                if (storage.getUserPublicKey()!! in updateData.updatedMembers) {
+                    // 1st case: you are part of the removed members
+                    when {
+                        isOutgoing -> context.getString(R.string.MessageRecord_left_group)
+                        else -> context.getString(R.string.MessageRecord_you_were_removed_from_the_group)
                     }
                 } else {
                     // 2nd case: you are not part of the removed members
                     val members = updateData.updatedMembers.joinToString(", ", transform = ::getSenderName)
-                    if (isOutgoing) {
-                        context.getString(R.string.MessageRecord_you_removed_s_from_the_group, members)
-                    } else {
-                        context.getString(R.string.MessageRecord_s_removed_s_from_the_group, senderName, members)
+                    when {
+                        isOutgoing -> context.getString(R.string.MessageRecord_you_removed_s_from_the_group, members)
+                        else -> context.getString(R.string.MessageRecord_s_removed_s_from_the_group, senderName, members)
                     }
                 }
-            }
-            is UpdateMessageData.Kind.GroupMemberLeft -> if (isOutgoing) {
-                context.getString(R.string.MessageRecord_left_group)
-            } else {
-                context.getString(R.string.ConversationItem_group_action_left, senderName)
+            is UpdateMessageData.Kind.GroupMemberLeft -> when {
+                isOutgoing -> context.getString(R.string.MessageRecord_left_group)
+                else -> context.getString(R.string.ConversationItem_group_action_left, senderName)
             }
             else -> return ""
         }

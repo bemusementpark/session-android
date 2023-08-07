@@ -111,7 +111,9 @@ class SettingsActivity : PassphraseRequiredActionBarActivity() {
     }
 
     private fun getDisplayName(): String =
-        TextSecurePreferences.getProfileName(this) ?: truncateIdForDisplay(hexEncodedPublicKey)
+        TextSecurePreferences.getProfileName(this)
+            ?.let(::maybeTruncateIdForDisplay)
+            ?: truncateIdForDisplay(hexEncodedPublicKey)
 
     private fun setupProfilePictureView(view: ProfilePictureView) {
         view.apply {
