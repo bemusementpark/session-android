@@ -68,11 +68,12 @@
         android:text="@string/copy" />
 
     <TextView
+        style="@style/Widget.Session.Button.Common.Borderless"
         android:id="@+id/termsTextView"
         android:layout_width="match_parent"
         android:layout_height="@dimen/onboarding_button_bottom_offset"
-        android:layout_marginLeft="@dimen/massive_spacing"
-        android:layout_marginRight="@dimen/massive_spacing"
+        android:layout_marginHorizontal="@dimen/massive_spacing"
+        android:paddingHorizontal="8dp"
         android:gravity="center"
         android:textColor="?android:textColorTertiary"
         android:textColorLink="?colorAccent"

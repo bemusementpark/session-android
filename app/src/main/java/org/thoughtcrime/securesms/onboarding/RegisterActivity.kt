@@ -8,6 +8,7 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
@@ -28,6 +29,7 @@ import org.session.libsignal.utilities.hexEncodedPublicKey
 import org.thoughtcrime.securesms.BaseActionBarActivity
 import org.thoughtcrime.securesms.crypto.KeyPairUtilities
 import org.thoughtcrime.securesms.dependencies.ConfigFactory
+import org.thoughtcrime.securesms.showSessionDialog
 import org.thoughtcrime.securesms.util.push
 import org.thoughtcrime.securesms.util.setUpActionBarSessionLogo
 import javax.inject.Inject
@@ -60,23 +62,13 @@ class RegisterActivity : BaseActionBarActivity() {
         }
         binding.registerButton.setOnClickListener { register() }
         binding.copyButton.setOnClickListener { copyPublicKey() }
-        val termsExplanation = SpannableStringBuilder("By using this service, you agree to our Terms of Service and Privacy Policy")
-        termsExplanation.setSpan(StyleSpan(Typeface.BOLD), 40, 56, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        termsExplanation.setSpan(object : ClickableSpan() {
-
-            override fun onClick(widget: View) {
-                openURL("https://getsession.org/terms-of-service/")
-            }
-        }, 40, 56, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        termsExplanation.setSpan(StyleSpan(Typeface.BOLD), 61, 75, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        termsExplanation.setSpan(object : ClickableSpan() {
-
-            override fun onClick(widget: View) {
-                openURL("https://getsession.org/privacy-policy/")
-            }
-        }, 61, 75, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        binding.termsTextView.movementMethod = LinkMovementMethod.getInstance()
-        binding.termsTextView.text = termsExplanation
+        binding.termsTextView.apply {
+            movementMethod = LinkMovementMethod.getInstance()
+            text = SpannableStringBuilder("By using this service, you agree to our Terms of Service and Privacy Policy")
+                .apply { setSpan(StyleSpan(Typeface.BOLD), 40, 56, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE) }
+                .apply { setSpan(StyleSpan(Typeface.BOLD), 61, 75, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE) }
+            setOnClickListener { showTermsOfServiceDialog() }
+        }
         updateKeyPair()
     }
     // endregion
@@ -143,15 +135,6 @@ class RegisterActivity : BaseActionBarActivity() {
         val clip = ClipData.newPlainText("Session ID", x25519KeyPair!!.hexEncodedPublicKey)
         clipboard.setPrimaryClip(clip)
         Toast.makeText(this, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun openURL(url: String) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, R.string.invalid_url, Toast.LENGTH_SHORT).show()
-        }
     }
     // endregion
 }
