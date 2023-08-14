@@ -686,6 +686,7 @@
     <string name="registration_activity__skip">Skip</string>
     <string name="RegistrationActivity_backup_failure_downgrade">Cannot import backups from newer versions of Session</string>
     <string name="RegistrationActivity_incorrect_backup_passphrase">Incorrect backup passphrase</string>
+    <string name="registration_by_using_you_agree_to_terms_and_privacy_policy"><![CDATA[By using this service, you agree to our <b>Terms of Service</b> and <b>Privacy Policy</b>]]></string>
     <string name="BackupDialog_enable_local_backups">Enable local backups?</string>
     <string name="BackupDialog_enable_backups">Enable backups</string>
     <string name="BackupDialog_please_acknowledge_your_understanding_by_marking_the_confirmation_check_box">Please acknowledge your understanding by marking the confirmation check box.</string>

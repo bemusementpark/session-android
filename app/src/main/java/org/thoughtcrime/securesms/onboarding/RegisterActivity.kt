@@ -9,6 +9,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Html
+import android.text.Html.FROM_HTML_MODE_LEGACY
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
@@ -16,6 +18,7 @@ import android.text.style.ClickableSpan
 import android.text.style.StyleSpan
 import android.view.View
 import android.widget.Toast
+import androidx.core.text.HtmlCompat
 import com.goterl.lazysodium.utils.KeyPair
 import dagger.hilt.android.AndroidEntryPoint
 import network.loki.messenger.R
@@ -63,10 +66,9 @@ class RegisterActivity : BaseActionBarActivity() {
         binding.registerButton.setOnClickListener { register() }
         binding.copyButton.setOnClickListener { copyPublicKey() }
         binding.termsTextView.apply {
+            text = getString(R.string.registration_by_using_you_agree_to_terms_and_privacy_policy)
+                .let { HtmlCompat.fromHtml(it, 0) }
             movementMethod = LinkMovementMethod.getInstance()
-            text = SpannableStringBuilder("By using this service, you agree to our Terms of Service and Privacy Policy")
-                .apply { setSpan(StyleSpan(Typeface.BOLD), 40, 56, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE) }
-                .apply { setSpan(StyleSpan(Typeface.BOLD), 61, 75, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE) }
             setOnClickListener { showTermsOfServiceDialog() }
         }
         updateKeyPair()
