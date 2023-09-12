@@ -153,6 +153,7 @@ class BatchMessageReceiveJob(
                             when (message) {
                                 is VisibleMessage -> {
                                     MessageReceiver.updateExpiryIfNeeded(
+                                        threadId,
                                         message,
                                         proto,
                                         openGroupID

@@ -69,7 +69,7 @@ fun MessageReceiver.handle(message: Message, proto: SignalServiceProtos.Content,
     // Do nothing if the message was outdated
     if (MessageReceiver.messageIsOutdated(message, threadId, openGroupID)) { return }
 
-    MessageReceiver.updateExpiryIfNeeded(message, proto, openGroupID)
+    MessageReceiver.updateExpiryIfNeeded(threadId, message, proto, openGroupID)
     when (message) {
         is ReadReceipt -> handleReadReceipt(message)
         is TypingIndicator -> handleTypingIndicator(message)
@@ -277,6 +277,7 @@ fun handleMessageRequestResponse(message: MessageRequestResponse) {
 //endregion
 
 fun MessageReceiver.updateExpiryIfNeeded(
+    threadID: Long,
     message: Message,
     proto: SignalServiceProtos.Content,
     openGroupID: String?
@@ -285,9 +286,7 @@ fun MessageReceiver.updateExpiryIfNeeded(
 
     val sentTime = message.sentTimestamp ?: throw MessageReceiver.Error.InvalidMessage
     if (!proto.hasLastDisappearingMessageChangeTimestamp()) return
-    val threadID =
-        storage.getThreadIdFor(message.sender!!, message.groupPublicKey, openGroupID, false)
-            ?: throw MessageReceiver.Error.NoThread
+
     val recipient = storage.getRecipientForThread(threadID) ?: throw MessageReceiver.Error.NoThread
 
     val localConfig = storage.getExpirationConfiguration(threadID)

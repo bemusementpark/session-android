@@ -55,10 +55,14 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
   }
 
   public void scheduleDeletion(long id, boolean mms, long expiresInMillis) {
+    android.util.Log.d(TAG, "scheduleDeletion() called with: id = [" + id + "], mms = [" + mms + "], expiresInMillis = [" + expiresInMillis + "]");
+
     scheduleDeletion(id, mms, System.currentTimeMillis(), expiresInMillis);
   }
 
   public void scheduleDeletion(long id, boolean mms, long startedAtTimestamp, long expiresInMillis) {
+    android.util.Log.d(TAG, "scheduleDeletion() called with: id = [" + id + "], mms = [" + mms + "], startedAtTimestamp = [" + startedAtTimestamp + "], expiresInMillis = [" + expiresInMillis + "]");
+
     long expiresAtMillis = startedAtTimestamp + expiresInMillis;
 
     synchronized (expiringMessageReferences) {
@@ -68,6 +72,8 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
   }
 
   public void checkSchedule() {
+    android.util.Log.d(TAG, "checkSchedule() called");
+
     synchronized (expiringMessageReferences) {
       expiringMessageReferences.notifyAll();
     }
@@ -75,6 +81,8 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
 
   @Override
   public void setExpirationTimer(@NotNull ExpirationTimerUpdate message, ExpiryMode expiryMode) {
+    android.util.Log.d(TAG, "setExpirationTimer() called with: message = [" + message + "], expiryMode = [" + expiryMode + "]");
+
     String userPublicKey = TextSecurePreferences.getLocalNumber(context);
     String senderPublicKey = message.getSender();
     long sentTimestamp = message.getSentTimestamp() == null ? 0 : message.getSentTimestamp();
@@ -94,6 +102,7 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
   }
 
   private void insertIncomingExpirationTimerMessage(ExpirationTimerUpdate message, long expireStartedAt) {
+    android.util.Log.d(TAG, "insertIncomingExpirationTimerMessage() called with: message = [" + message + "], expireStartedAt = [" + expireStartedAt + "]");
 
     String senderPublicKey = message.getSender();
     Long sentTimestamp = message.getSentTimestamp();
@@ -141,6 +150,7 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
   }
 
   private void insertOutgoingExpirationTimerMessage(ExpirationTimerUpdate message, long expireStartedAt) {
+    android.util.Log.d(TAG, "insertOutgoingExpirationTimerMessage() called with: message = [" + message + "], expireStartedAt = [" + expireStartedAt + "]");
 
     Long sentTimestamp = message.getSentTimestamp();
     String groupId = message.getGroupPublicKey();
@@ -168,6 +178,8 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
 
   @Override
   public void startAnyExpiration(long timestamp, @NotNull String author, long expireStartedAt) {
+    android.util.Log.d(TAG, "startAnyExpiration() called with: timestamp = [" + timestamp + "], author = [" + author + "], expireStartedAt = [" + expireStartedAt + "]");
+
     MessageRecord messageRecord = mmsSmsDatabase.getMessageFor(timestamp, author);
     if (messageRecord != null) {
       boolean mms = messageRecord.isMms();
@@ -186,6 +198,8 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
   private class LoadTask implements Runnable {
 
     public void run() {
+      android.util.Log.d(TAG, "run() called");
+
       SmsDatabase.Reader smsReader = smsDatabase.readerFor(smsDatabase.getExpirationStartedMessages());
       MmsDatabase.Reader mmsReader = mmsDatabase.getExpireStartedMessages();
 
@@ -211,6 +225,8 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
   @SuppressWarnings("InfiniteLoopStatement")
   private class ProcessTask implements Runnable {
     public void run() {
+      android.util.Log.d(TAG, "run() called");
+
       while (true) {
         ExpiringMessageReference expiredMessage = null;
 
@@ -248,6 +264,8 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
     private final long    expiresAtMillis;
 
     private ExpiringMessageReference(long id, boolean mms, long expiresAtMillis) {
+      android.util.Log.d(TAG, "ExpiringMessageReference() called with: id = [" + id + "], mms = [" + mms + "], expiresAtMillis = [" + expiresAtMillis + "]");
+
       this.id = id;
       this.mms = mms;
       this.expiresAtMillis = expiresAtMillis;
