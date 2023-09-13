@@ -93,6 +93,8 @@ import org.thoughtcrime.securesms.util.SessionMetaProtocol
 import java.security.MessageDigest
 import network.loki.messenger.libsession_util.util.Contact as LibSessionContact
 
+private const val TAG = "Storage"
+
 open class Storage(
     context: Context,
     helper: SQLCipherOpenHelper,
@@ -239,6 +241,11 @@ open class Storage(
     }
 
     override fun markConversationAsRead(threadId: Long, lastSeenTime: Long, force: Boolean) {
+        android.util.Log.d(
+            TAG,
+            "markConversationAsRead() called with: threadId = $threadId, lastSeenTime = $lastSeenTime, force = $force"
+        )
+
         val threadDb = DatabaseComponent.get(context).threadDatabase()
         getRecipientForThread(threadId)?.let { recipient ->
             val currentLastRead = threadDb.getLastSeenAndHasSent(threadId).first()
@@ -281,6 +288,11 @@ open class Storage(
     }
 
     override fun updateThread(threadId: Long, unarchive: Boolean) {
+        android.util.Log.d(
+            TAG,
+            "updateThread() called with: threadId = $threadId, unarchive = $unarchive"
+        )
+
         val threadDb = DatabaseComponent.get(context).threadDatabase()
         threadDb.update(threadId, unarchive, false)
     }
@@ -292,6 +304,12 @@ open class Storage(
                          openGroupID: String?,
                          attachments: List<Attachment>,
                          runThreadUpdate: Boolean): Long? {
+
+        android.util.Log.d(
+            TAG,
+            "persist() called with: message = $message, quotes = $quotes, linkPreview = $linkPreview, groupPublicKey = $groupPublicKey, openGroupID = $openGroupID, attachments = $attachments, runThreadUpdate = $runThreadUpdate"
+        )
+
         var messageID: Long? = null
         val senderAddress = fromSerialized(message.sender!!)
         val isUserSender = (message.sender!! == getUserPublicKey())
@@ -380,6 +398,10 @@ open class Storage(
                 DatabaseComponent.get(context).lokiMessageDatabase().setMessageServerHash(id, serverHash)
             }
         }
+        android.util.Log.d(
+            TAG,
+            "persist() and... expiryMode = $expiryMode"
+        )
         if (expiryMode is ExpiryMode.AfterSend) {
             SSKEnvironment.shared.messageExpirationManager.startAnyExpiration(message.sentTimestamp!!, message.sender!!, expireStartedAt)
         }
@@ -469,6 +491,11 @@ open class Storage(
     }
 
     private fun updateUser(userProfile: UserProfile, messageTimestamp: Long) {
+        android.util.Log.d(
+            TAG,
+            "updateUser() called with: userProfile = $userProfile, messageTimestamp = $messageTimestamp"
+        )
+
         val userPublicKey = getUserPublicKey() ?: return
         // would love to get rid of recipient and context from this
         val recipient = Recipient.from(context, fromSerialized(userPublicKey), false)
@@ -1696,6 +1723,8 @@ open class Storage(
     }
 
     override fun getExpirationConfiguration(threadId: Long): ExpirationConfiguration? {
+        android.util.Log.d(TAG, "getExpirationConfiguration() called with: threadId = $threadId")
+
         val recipient = getRecipientForThread(threadId) ?: return null
         val dbExpirationMetadata = DatabaseComponent.get(context).expirationConfigurationDatabase().getExpirationConfiguration(threadId) ?: return null
         return when {
@@ -1716,6 +1745,8 @@ open class Storage(
     }
 
     override fun setExpirationConfiguration(config: ExpirationConfiguration) {
+        android.util.Log.d(TAG, "setExpirationConfiguration() called with: config = $config")
+
         val recipient = getRecipientForThread(config.threadId) ?: return
         if (recipient.isClosedGroupRecipient) {
             val userGroups = configFactory.userGroups ?: return
@@ -1738,6 +1769,8 @@ open class Storage(
     }
 
     override fun getExpiringMessages(messageIds: List<Long>): List<Pair<Long, Long>> {
+        android.util.Log.d(TAG, "getExpiringMessages() called with: messageIds = $messageIds")
+
         val expiringMessages = mutableListOf<Pair<Long, Long>>()
         val smsDb = DatabaseComponent.get(context).smsDatabase()
         smsDb.readerFor(smsDb.expirationNotStartedMessages).use { reader ->
@@ -1759,6 +1792,11 @@ open class Storage(
     }
 
     override fun updateDisappearingState(threadID: Long, disappearingState: Recipient.DisappearingState) {
+        android.util.Log.d(
+            TAG,
+            "updateDisappearingState() called with: threadID = $threadID, disappearingState = $disappearingState"
+        )
+
         val threadDb = DatabaseComponent.get(context).threadDatabase()
         val recipient = threadDb.getRecipientForThreadId(threadID) ?: return
         val recipientDb = DatabaseComponent.get(context).recipientDatabase()

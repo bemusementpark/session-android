@@ -42,6 +42,8 @@ public class MarkReadReceiver extends BroadcastReceiver {
   @SuppressLint("StaticFieldLeak")
   @Override
   public void onReceive(final Context context, Intent intent) {
+    android.util.Log.d(TAG, "onReceive() called");
+
     if (!CLEAR_ACTION.equals(intent.getAction()))
       return;
 
