@@ -808,13 +808,9 @@ open class Storage(
     override fun markAsSent(timestamp: Long, author: String) {
         val database = DatabaseComponent.get(context).mmsSmsDatabase()
         val messageRecord = database.getMessageFor(timestamp, author) ?: return
-        if (messageRecord.isMms) {
-            val mmsDatabase = DatabaseComponent.get(context).mmsDatabase()
-            mmsDatabase.markAsSent(messageRecord.getId(), true)
-        } else {
-            val smsDatabase = DatabaseComponent.get(context).smsDatabase()
-            smsDatabase.markAsSent(messageRecord.getId(), true)
-        }
+        getMmsDatabaseElseSms(messageRecord.isMms).markAsSent(messageRecord.getId(), true)
+
+        SSKEnvironment.shared.messageExpirationManager.startAnyExpiration(timestamp, author, messageRecord.expireStarted)
     }
 
     override fun markAsSyncing(timestamp: Long, author: String) {
@@ -836,26 +832,13 @@ open class Storage(
     override fun markAsSending(timestamp: Long, author: String) {
         val database = DatabaseComponent.get(context).mmsSmsDatabase()
         val messageRecord = database.getMessageFor(timestamp, author) ?: return
-        if (messageRecord.isMms) {
-            val mmsDatabase = DatabaseComponent.get(context).mmsDatabase()
-            mmsDatabase.markAsSending(messageRecord.getId())
-        } else {
-            val smsDatabase = DatabaseComponent.get(context).smsDatabase()
-            smsDatabase.markAsSending(messageRecord.getId())
-            messageRecord.isPending
-        }
+        getMmsDatabaseElseSms(messageRecord.isMms).markAsSending(messageRecord.getId())
     }
 
     override fun markUnidentified(timestamp: Long, author: String) {
         val database = DatabaseComponent.get(context).mmsSmsDatabase()
         val messageRecord = database.getMessageFor(timestamp, author) ?: return
-        if (messageRecord.isMms) {
-            val mmsDatabase = DatabaseComponent.get(context).mmsDatabase()
-            mmsDatabase.markUnidentified(messageRecord.getId(), true)
-        } else {
-            val smsDatabase = DatabaseComponent.get(context).smsDatabase()
-            smsDatabase.markUnidentified(messageRecord.getId(), true)
-        }
+        getMmsDatabaseElseSms(messageRecord.isMms).markUnidentified(messageRecord.getId(), true)
     }
 
     override fun markAsSentFailed(timestamp: Long, author: String, error: Exception) {

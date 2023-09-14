@@ -47,8 +47,8 @@ class MessageSendJob(val message: Message, val destination: Destination) : Job {
             if (!messageDataProvider.isOutgoingMessage(message.sentTimestamp!!) && message.reaction == null) return // The message has been deleted
             val attachmentIDs = mutableListOf<Long>()
             attachmentIDs.addAll(message.attachmentIDs)
-            message.quote?.let { it.attachmentID?.let { attachmentID -> attachmentIDs.add(attachmentID) } }
-            message.linkPreview?.let { it.attachmentID?.let { attachmentID -> attachmentIDs.add(attachmentID) } }
+            message.quote?.attachmentID?.let(attachmentIDs::add)
+            message.linkPreview?.attachmentID?.let(attachmentIDs::add)
             val attachments = attachmentIDs.mapNotNull { messageDataProvider.getDatabaseAttachment(it) }
             val attachmentsToUpload = attachments.filter { it.url.isNullOrEmpty() }
             attachmentsToUpload.forEach {

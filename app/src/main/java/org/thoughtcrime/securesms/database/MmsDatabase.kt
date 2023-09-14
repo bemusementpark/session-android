@@ -270,7 +270,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         markAs(messageId, MmsSmsColumns.Types.BASE_SYNC_FAILED_TYPE)
     }
 
-    fun markAsSending(messageId: Long) {
+    override fun markAsSending(messageId: Long) {
         markAs(messageId, MmsSmsColumns.Types.BASE_SENDING_TYPE)
     }
 

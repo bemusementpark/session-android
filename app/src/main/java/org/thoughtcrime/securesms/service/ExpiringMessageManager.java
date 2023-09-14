@@ -17,6 +17,7 @@ import org.session.libsession.utilities.recipients.Recipient;
 import org.session.libsignal.messages.SignalServiceGroup;
 import org.session.libsignal.utilities.Log;
 import org.session.libsignal.utilities.guava.Optional;
+import org.thoughtcrime.securesms.database.MessagingDatabase;
 import org.thoughtcrime.securesms.database.MmsDatabase;
 import org.thoughtcrime.securesms.database.MmsSmsDatabase;
 import org.thoughtcrime.securesms.database.SmsDatabase;
@@ -96,7 +97,9 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
     } else {
       insertIncomingExpirationTimerMessage(message, expireStartedAt);
     }
-    if (expiryMode instanceof ExpiryMode.AfterSend && message.getSentTimestamp() != null && senderPublicKey != null) {
+    if (expiryMode instanceof ExpiryMode.AfterSend
+            && message.getSentTimestamp() != null
+            && senderPublicKey != null) {
       startAnyExpiration(message.getSentTimestamp(), senderPublicKey, expireStartedAt);
     }
   }
@@ -186,13 +189,14 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
       ExpirationConfiguration config = DatabaseComponent.get(context).storage().getExpirationConfiguration(messageRecord.getThreadId());
       if (config == null || !config.isEnabled()) return;
       ExpiryMode mode = config.getExpiryMode();
-      if (mms) {
-        mmsDatabase.markExpireStarted(messageRecord.getId(), expireStartedAt);
-      } else {
-        smsDatabase.markExpireStarted(messageRecord.getId(), expireStartedAt);
-      }
-      scheduleDeletion(messageRecord.getId(), mms, expireStartedAt, (mode != null ? mode.getExpiryMillis() : 0));
+      getDatabase(mms).markExpireStarted(messageRecord.getId(), expireStartedAt);
+      scheduleDeletion(messageRecord.getId(), mms, expireStartedAt, mode.getExpiryMillis());
     }
+  }
+
+  private MessagingDatabase getDatabase(boolean isMms) {
+    if (isMms) return mmsDatabase;
+    else return smsDatabase;
   }
 
   private class LoadTask implements Runnable {
@@ -251,8 +255,7 @@ public class ExpiringMessageManager implements SSKEnvironment.MessageExpirationM
         }
 
         if (expiredMessage != null) {
-          if (expiredMessage.mms) mmsDatabase.deleteMessage(expiredMessage.id);
-          else                    smsDatabase.deleteMessage(expiredMessage.id);
+          getDatabase(expiredMessage.mms).deleteMessage(expiredMessage.id);
         }
       }
     }

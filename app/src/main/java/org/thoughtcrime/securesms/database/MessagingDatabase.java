@@ -38,6 +38,8 @@ public abstract class MessagingDatabase extends Database implements MmsSmsColumn
 
   public abstract void markAsSent(long messageId, boolean secure);
 
+  public abstract void markAsSending(long id);
+
   public abstract void markAsSyncing(long id);
 
   public abstract void markAsResyncing(long id);
