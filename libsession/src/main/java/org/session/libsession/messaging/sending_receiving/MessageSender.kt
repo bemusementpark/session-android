@@ -29,6 +29,7 @@ import org.session.libsession.snode.SnodeAPI
 import org.session.libsession.snode.SnodeMessage
 import org.session.libsession.snode.SnodeModule
 import org.session.libsession.utilities.Address
+import org.session.libsession.utilities.Device
 import org.session.libsession.utilities.GroupUtil
 import org.session.libsession.utilities.SSKEnvironment
 import org.session.libsignal.crypto.PushTransportDetails
@@ -241,8 +242,15 @@ object MessageSender {
     private fun sendToOpenGroupDestination(destination: Destination, message: Message): Promise<Unit, Exception> {
         val deferred = deferred<Unit, Exception>()
         val storage = MessagingModuleConfiguration.shared.storage
+        val configFactory = MessagingModuleConfiguration.shared.configFactory
         if (message.sentTimestamp == null) {
             message.sentTimestamp = SnodeAPI.nowWithOffset
+        }
+        // Attach the blocks message requests info
+        configFactory.user?.let { user ->
+            if (message is VisibleMessage) {
+                message.blocksMessageRequests = !user.getCommunityMessageRequests()
+            }
         }
         val userEdKeyPair = MessagingModuleConfiguration.shared.getUserED25519KeyPair()!!
         var serverCapabilities = listOf<String>()
@@ -454,8 +462,8 @@ object MessageSender {
     }
 
     // Closed groups
-    fun createClosedGroup(name: String, members: Collection<String>): Promise<String, Exception> {
-        return create(name, members)
+    fun createClosedGroup(device: Device, name: String, members: Collection<String>): Promise<String, Exception> {
+        return create(device, name, members)
     }
 
     fun explicitNameChange(groupPublicKey: String, newName: String) {

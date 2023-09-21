@@ -50,7 +50,7 @@ import org.session.libsession.messaging.sending_receiving.attachments.Attachment
 import org.session.libsession.messaging.sending_receiving.attachments.DatabaseAttachment
 import org.session.libsession.messaging.sending_receiving.data_extraction.DataExtractionNotificationInfoMessage
 import org.session.libsession.messaging.sending_receiving.link_preview.LinkPreview
-import org.session.libsession.messaging.sending_receiving.notifications.PushNotificationAPI
+import org.session.libsession.messaging.sending_receiving.notifications.PushRegistryV1
 import org.session.libsession.messaging.sending_receiving.pollers.ClosedGroupPollerV2
 import org.session.libsession.messaging.sending_receiving.quotes.QuoteModel
 import org.session.libsession.messaging.utilities.SessionId
@@ -188,6 +188,11 @@ open class Storage(context: Context, helper: SQLCipherOpenHelper, private val co
         val db = DatabaseComponent.get(context).recipientDatabase()
         db.setProfileAvatar(recipient, newProfilePicture)
         db.setProfileKey(recipient, newProfileKey)
+    }
+
+    override fun setBlocksCommunityMessageRequests(recipient: Recipient, blocksMessageRequests: Boolean) {
+        val db = DatabaseComponent.get(context).recipientDatabase()
+        db.setBlocksCommunityMessageRequests(recipient, blocksMessageRequests)
     }
 
     override fun setUserProfilePicture(newProfilePicture: String?, newProfileKey: ByteArray?) {
@@ -430,6 +435,10 @@ open class Storage(context: Context, helper: SQLCipherOpenHelper, private val co
         return configFactory.canPerformChange(variant, publicKey, changeTimestampMs)
     }
 
+    override fun isCheckingCommunityRequests(): Boolean {
+        return configFactory.user?.getCommunityMessageRequests() == true
+    }
+
     fun notifyUpdates(forConfigObject: ConfigBase) {
         when (forConfigObject) {
             is UserProfile -> updateUser(forConfigObject)
@@ -591,7 +600,7 @@ open class Storage(context: Context, helper: SQLCipherOpenHelper, private val co
                 val expireTimer = group.disappearingTimer
                 setExpirationTimer(groupId, expireTimer.toInt())
                 // Notify the PN server
-                PushNotificationAPI.performOperation(PushNotificationAPI.ClosedGroupOperation.Subscribe, group.sessionId, localUserPublicKey)
+                PushRegistryV1.subscribeGroup(group.sessionId, publicKey = localUserPublicKey)
                 // Notify the user
                 val threadID = getOrCreateThreadIdFor(Address.fromSerialized(groupId))
                 threadDb.setDate(threadID, formationTimestamp)
@@ -1405,7 +1414,7 @@ open class Storage(context: Context, helper: SQLCipherOpenHelper, private val co
                     val blindedId = when {
                         recipient.isGroupRecipient -> null
                         recipient.isOpenGroupInboxRecipient -> {
-                            GroupUtil.getDecodedOpenGroupInbox(address)
+                            GroupUtil.getDecodedOpenGroupInboxSessionId(address)
                         }
                         else -> {
                             if (SessionId(address).prefix == IdPrefix.BLINDED) {
@@ -1524,16 +1533,12 @@ open class Storage(context: Context, helper: SQLCipherOpenHelper, private val co
         if (mapping.sessionId != null) {
             return mapping
         }
-        val threadDb = DatabaseComponent.get(context).threadDatabase()
-        threadDb.readerFor(threadDb.conversationList).use { reader ->
-            while (reader.next != null) {
-                val recipient = reader.current.recipient
-                val sessionId = recipient.address.serialize()
-                if (!recipient.isGroupRecipient && SodiumUtilities.sessionId(sessionId, blindedId, serverPublicKey)) {
-                    val contactMapping = mapping.copy(sessionId = sessionId)
-                    db.addBlindedIdMapping(contactMapping)
-                    return contactMapping
-                }
+        getAllContacts().forEach { contact ->
+            val sessionId = SessionId(contact.sessionID)
+            if (sessionId.prefix == IdPrefix.STANDARD && SodiumUtilities.sessionId(sessionId.hexString, blindedId, serverPublicKey)) {
+                val contactMapping = mapping.copy(sessionId = sessionId.hexString)
+                db.addBlindedIdMapping(contactMapping)
+                return contactMapping
             }
         }
         db.getBlindedIdMappingsExceptFor(server).forEach {

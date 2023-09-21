@@ -67,12 +67,13 @@ import org.thoughtcrime.securesms.home.search.GlobalSearchViewModel
 import org.thoughtcrime.securesms.messagerequests.MessageRequestsActivity
 import org.thoughtcrime.securesms.mms.GlideApp
 import org.thoughtcrime.securesms.mms.GlideRequests
+import org.thoughtcrime.securesms.notifications.PushRegistry
 import org.thoughtcrime.securesms.onboarding.SeedActivity
 import org.thoughtcrime.securesms.onboarding.SeedReminderViewDelegate
 import org.thoughtcrime.securesms.permissions.Permissions
 import org.thoughtcrime.securesms.preferences.SettingsActivity
-import org.thoughtcrime.securesms.showSessionDialog
 import org.thoughtcrime.securesms.showMuteDialog
+import org.thoughtcrime.securesms.showSessionDialog
 import org.thoughtcrime.securesms.util.ConfigurationMessageUtilities
 import org.thoughtcrime.securesms.util.DateUtils
 import org.thoughtcrime.securesms.util.IP2Country
@@ -106,6 +107,7 @@ class HomeActivity : PassphraseRequiredActionBarActivity(),
     @Inject lateinit var groupDatabase: GroupDatabase
     @Inject lateinit var textSecurePreferences: TextSecurePreferences
     @Inject lateinit var configFactory: ConfigFactory
+    @Inject lateinit var pushRegistry: PushRegistry
 
     private val globalSearchViewModel by viewModels<GlobalSearchViewModel>()
     private val homeViewModel by viewModels<HomeViewModel>()
@@ -230,8 +232,7 @@ class HomeActivity : PassphraseRequiredActionBarActivity(),
                 (applicationContext as ApplicationContext).startPollingIfNeeded()
                 // update things based on TextSecurePrefs (profile info etc)
                 // Set up remaining components if needed
-                val application = ApplicationContext.getInstance(this@HomeActivity)
-                application.registerForFCMIfNeeded(false)
+                pushRegistry.refresh(false)
                 if (textSecurePreferences.getLocalNumber() != null) {
                     OpenGroupManager.startPolling()
                     JobQueue.shared.resumePendingJobs()
@@ -298,12 +299,17 @@ class HomeActivity : PassphraseRequiredActionBarActivity(),
         }
         EventBus.getDefault().register(this@HomeActivity)
         if (intent.hasExtra(FROM_ONBOARDING)
-            && intent.getBooleanExtra(FROM_ONBOARDING, false)
-            && !(getSystemService(NOTIFICATION_SERVICE) as NotificationManager).areNotificationsEnabled()
-        ) {
-            Permissions.with(this)
-                .request(Manifest.permission.POST_NOTIFICATIONS)
-                .execute()
+            && intent.getBooleanExtra(FROM_ONBOARDING, false)) {
+            if ((getSystemService(NOTIFICATION_SERVICE) as NotificationManager).areNotificationsEnabled().not()) {
+                Permissions.with(this)
+                    .request(Manifest.permission.POST_NOTIFICATIONS)
+                    .execute()
+            }
+            configFactory.user?.let { user ->
+                if (!user.isBlockCommunityMessageRequestsSet()) {
+                    user.setCommunityMessageRequests(false)
+                }
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 package org.session.libsession.utilities
 
-import network.loki.messenger.libsession_util.util.GroupInfo
+import org.session.libsession.messaging.open_groups.OpenGroup
+import org.session.libsession.messaging.utilities.SessionId
 import org.session.libsignal.messages.SignalServiceGroup
 import org.session.libsignal.utilities.Hex
 import java.io.IOException
@@ -16,8 +17,15 @@ object GroupUtil {
     }
 
     @JvmStatic
-    fun getEncodedOpenGroupInboxID(groupInboxID: ByteArray): String {
-        return OPEN_GROUP_INBOX_PREFIX + Hex.toStringCondensed(groupInboxID)
+    fun getEncodedOpenGroupInboxID(openGroup: OpenGroup, sessionId: SessionId): Address {
+        val openGroupInboxId =
+            "${openGroup.server}!${openGroup.publicKey}!${sessionId.hexString}".toByteArray()
+        return getEncodedOpenGroupInboxID(openGroupInboxId)
+    }
+
+    @JvmStatic
+    fun getEncodedOpenGroupInboxID(groupInboxID: ByteArray): Address {
+        return Address.fromSerialized(OPEN_GROUP_INBOX_PREFIX + Hex.toStringCondensed(groupInboxID))
     }
 
     @JvmStatic
@@ -52,7 +60,7 @@ object GroupUtil {
     }
 
     @JvmStatic
-    fun getDecodedOpenGroupInbox(groupID: String): String {
+    fun getDecodedOpenGroupInboxSessionId(groupID: String): String {
         val decodedGroupId = getDecodedGroupID(groupID)
         if (decodedGroupId.split("!").count() > 2) {
             return decodedGroupId.split("!", limit = 3)[2]
