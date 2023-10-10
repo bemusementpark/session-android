@@ -375,8 +375,8 @@ open class Storage(
             }
         }
         message.serverHash?.let { serverHash ->
-            messageID?.let { id ->
-                DatabaseComponent.get(context).lokiMessageDatabase().setMessageServerHash(id, serverHash)
+            message.sentTimestamp?.let {
+                DatabaseComponent.get(context).lokiMessageDatabase().setMessageServerHash(it, serverHash)
             }
         }
         if (expiryMode is ExpiryMode.AfterSend) {
@@ -878,8 +878,8 @@ open class Storage(
         db.clearErrorMessage(messageID)
     }
 
-    override fun setMessageServerHash(messageID: Long, serverHash: String) {
-        DatabaseComponent.get(context).lokiMessageDatabase().setMessageServerHash(messageID, serverHash)
+    override fun setMessageServerHash(timestamp: Long, serverHash: String) {
+        DatabaseComponent.get(context).lokiMessageDatabase().setMessageServerHash(timestamp, serverHash)
     }
 
     override fun getGroup(groupID: String): GroupRecord? {

@@ -124,7 +124,7 @@ interface StorageProtocol {
     fun markAsSyncFailed(timestamp: Long, author: String, error: Exception)
     fun markAsSentFailed(timestamp: Long, author: String, error: Exception)
     fun clearErrorMessage(messageID: Long)
-    fun setMessageServerHash(messageID: Long, serverHash: String)
+    fun setMessageServerHash(timestamp: Long, serverHash: String)
 
     // Closed Groups
     fun getGroup(groupID: String): GroupRecord?

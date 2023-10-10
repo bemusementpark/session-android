@@ -26,19 +26,12 @@ class OpenGroupDeleteJob(private val messageServerIds: LongArray, private val th
 
         // FIXME: This entire process should probably run in a transaction (with the attachment deletion happening only if it succeeded)
         try {
-            val messageIds = dataProvider.getMessageIDs(messageServerIds.toList(), threadId)
+            val (smsIds, mmsIds) = dataProvider.getMessageIDs(messageServerIds.toList(), threadId)
 
-            // Delete the SMS messages
-            if (messageIds.first.isNotEmpty()) {
-                dataProvider.deleteMessages(messageIds.first, threadId, true)
-            }
+            dataProvider.deleteMessages(smsIds, threadId, true)
+            dataProvider.deleteMessages(mmsIds, threadId, false)
 
-            // Delete the MMS messages
-            if (messageIds.second.isNotEmpty()) {
-                dataProvider.deleteMessages(messageIds.second, threadId, false)
-            }
-
-            Log.d(TAG, "Deleted ${messageIds.first.size + messageIds.second.size} messages successfully")
+            Log.d(TAG, "Deleted ${smsIds.size + mmsIds.size} messages successfully")
             delegate?.handleJobSucceeded(this, dispatcherName)
         }
         catch (e: Exception) {

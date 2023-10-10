@@ -1813,7 +1813,9 @@ class ConversationActivityV2 : PassphraseRequiredActionBarActivity(), InputBarDe
     override fun deleteMessages(messages: Set<MessageRecord>) {
         val recipient = viewModel.recipient ?: return
         val allSentByCurrentUser = messages.all { it.isOutgoing }
-        val allHasHash = messages.all { lokiMessageDb.getMessageServerHash(it.id) != null }
+        val allHasHash = messages.all {
+            lokiMessageDb.getMessageServerHash(it.timestamp, it.id) != null
+        }
         if (recipient.isOpenGroupRecipient) {
             val messageCount = 1
 

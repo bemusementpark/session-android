@@ -74,11 +74,9 @@ class DatabaseAttachmentProvider(context: Context, helper: SQLCipherOpenHelper) 
         attachmentDatabase.setTransferState(messageID, attachmentId, attachmentState.value)
     }
 
-    override fun getMessageForQuote(timestamp: Long, author: Address): Triple<Long, Boolean, String>? {
-        val messagingDatabase = DatabaseComponent.get(context).mmsSmsDatabase()
-        val message = messagingDatabase.getMessageFor(timestamp, author)
-        return if (message != null) Triple(message.id, message.isMms, message.body) else null
-    }
+    override fun getMessageForQuote(timestamp: Long, author: Address): Triple<Long, Boolean, String>? =
+        DatabaseComponent.get(context).mmsSmsDatabase().getMessageFor(timestamp, author)
+            ?.run { Triple(id, isMms, body) }
 
     override fun getAttachmentsAndLinkPreviewFor(mmsId: Long): List<Attachment> {
         return DatabaseComponent.get(context).attachmentDatabase().getAttachmentsForMessage(mmsId)
@@ -181,15 +179,19 @@ class DatabaseAttachmentProvider(context: Context, helper: SQLCipherOpenHelper) 
         return messageDB.getMessageIDs(serverIds, threadId)
     }
 
-    override fun deleteMessage(messageID: Long, isSms: Boolean) {
+    override fun deleteMessage(timestamp: Long, messageID: Long, isSms: Boolean) {
         val messagingDatabase: MessagingDatabase = if (isSms)  DatabaseComponent.get(context).smsDatabase()
                                                    else DatabaseComponent.get(context).mmsDatabase()
         messagingDatabase.deleteMessage(messageID)
-        DatabaseComponent.get(context).lokiMessageDatabase().deleteMessage(messageID, isSms)
-        DatabaseComponent.get(context).lokiMessageDatabase().deleteMessageServerHash(messageID)
+        DatabaseComponent.get(context).lokiMessageDatabase().apply {
+            deleteMessage(messageID, isSms)
+            deleteMessageServerHash(timestamp, messageID)
+        }
     }
 
     override fun deleteMessages(messageIDs: List<Long>, threadId: Long, isSms: Boolean) {
+        if (messageIDs.isEmpty()) return
+
         val messagingDatabase: MessagingDatabase = if (isSms)  DatabaseComponent.get(context).smsDatabase()
                                                    else DatabaseComponent.get(context).mmsDatabase()
 
@@ -212,9 +214,8 @@ class DatabaseAttachmentProvider(context: Context, helper: SQLCipherOpenHelper) 
         return message.id
     }
 
-    override fun getServerHashForMessage(messageID: Long): String? {
-        val messageDB = DatabaseComponent.get(context).lokiMessageDatabase()
-        return messageDB.getMessageServerHash(messageID)
+    override fun getServerHashForMessage(vararg keys: Long): String? = keys.asSequence().firstNotNullOfOrNull {
+        DatabaseComponent.get(context).lokiMessageDatabase().getMessageServerHash(it)
     }
 
     override fun getDatabaseAttachment(attachmentId: Long): DatabaseAttachment? {

@@ -61,7 +61,10 @@ class MarkReadReceiver : BroadcastReceiver() {
             val loki = DatabaseComponent.get(context).lokiMessageDatabase()
 
             task {
-                val hashToInfo = markedReadMessages.associateByNotNull { loki.getMessageServerHash(it.expirationInfo.id) }
+                val hashToInfo = markedReadMessages.associateByNotNull {
+                    loki.getMessageServerHash(it.syncMessageId.timetamp)
+                        ?: loki.getMessageServerHash(it.expirationInfo.id)
+                }
                 if (hashToInfo.isEmpty()) return@task
 
                 @Suppress("UNCHECKED_CAST")

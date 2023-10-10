@@ -174,7 +174,7 @@ class DefaultConversationRepository @Inject constructor(
                 MessageSender.send(unsendRequest, Address.fromSerialized(it))
             }
         }
-        messageDataProvider.deleteMessage(message.id, !message.isMms)
+        messageDataProvider.deleteMessage(message.timestamp, message.id, !message.isMms)
     }
 
     override fun setApproved(recipient: Recipient, isApproved: Boolean) {
@@ -194,15 +194,15 @@ class DefaultConversationRepository @Inject constructor(
             lokiMessageDb.getServerID(message.id, !message.isMms)?.let { messageServerID ->
                 OpenGroupApi.deleteMessage(messageServerID, openGroup.room, openGroup.server)
                     .success {
-                        messageDataProvider.deleteMessage(message.id, !message.isMms)
+                        messageDataProvider.deleteMessage(message.timestamp, message.id, !message.isMms)
                         continuation.resume(ResultOf.Success(Unit))
                     }.fail { error ->
                         continuation.resumeWithException(error)
                     }
             }
         } else {
-            messageDataProvider.deleteMessage(message.id, !message.isMms)
-            messageDataProvider.getServerHashForMessage(message.id)?.let { serverHash ->
+            messageDataProvider.deleteMessage(message.timestamp, message.id, !message.isMms)
+            messageDataProvider.getServerHashForMessage(message.timestamp, message.id)?.let { serverHash ->
                 var publicKey = recipient.address.serialize()
                 if (recipient.isClosedGroupRecipient) {
                     publicKey = GroupUtil.doubleDecodeGroupID(publicKey).toHexString()
@@ -219,16 +219,15 @@ class DefaultConversationRepository @Inject constructor(
 
     override fun buildUnsendRequest(recipient: Recipient, message: MessageRecord): UnsendRequest? {
         if (recipient.isOpenGroupRecipient) return null
-        messageDataProvider.getServerHashForMessage(message.id) ?: return null
-        val unsendRequest = UnsendRequest()
-        if (message.isOutgoing) {
-            unsendRequest.author = textSecurePreferences.getLocalNumber()
-        } else {
-            unsendRequest.author = message.individualRecipient.address.contactIdentifier()
+        messageDataProvider.getServerHashForMessage(message.timestamp, message.id) ?: return null
+        return UnsendRequest().apply {
+            author = if (message.isOutgoing) {
+                textSecurePreferences.getLocalNumber()
+            } else {
+                message.individualRecipient.address.contactIdentifier()
+            }
+            timestamp = message.timestamp
         }
-        unsendRequest.timestamp = message.timestamp
-
-        return unsendRequest
     }
 
     override suspend fun deleteMessageWithoutUnsendRequest(
@@ -246,7 +245,7 @@ class DefaultConversationRepository @Inject constructor(
             for ((messageServerID, message) in messageServerIDs) {
                 OpenGroupApi.deleteMessage(messageServerID, openGroup.room, openGroup.server)
                     .success {
-                        messageDataProvider.deleteMessage(message.id, !message.isMms)
+                        messageDataProvider.deleteMessage(message.timestamp, message.id, !message.isMms)
                     }.fail { error ->
                         continuation.resumeWithException(error)
                     }

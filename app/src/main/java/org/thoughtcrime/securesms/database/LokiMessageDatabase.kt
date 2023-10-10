@@ -213,32 +213,34 @@ class LokiMessageDatabase(context: Context, helper: SQLCipherOpenHelper) : Datab
         }
     }
 
-    fun getMessageServerHash(messageID: Long): String? {
-        val database = databaseHelper.readableDatabase
-        return database.get(messageHashTable, "${Companion.messageID} = ?", arrayOf(messageID.toString())) { cursor ->
+    fun getMessageServerHash(vararg keys: Long): String? = keys.asSequence().firstNotNullOfOrNull {
+        databaseHelper.readableDatabase.get(messageHashTable, "${Companion.messageID} = ?", arrayOf(it.toString())) { cursor ->
             cursor.getString(serverHash)
         }
     }
 
-    fun setMessageServerHash(messageID: Long, serverHash: String) {
-        val database = databaseHelper.writableDatabase
-        val contentValues = ContentValues(2)
-        contentValues.put(Companion.messageID, messageID)
-        contentValues.put(Companion.serverHash, serverHash)
-        database.insertOrUpdate(messageHashTable, contentValues, "${Companion.messageID} = ?", arrayOf(messageID.toString()))
+    fun setMessageServerHash(timestamp: Long, serverHash: String) {
+        val content = ContentValues(2).apply {
+            put(Companion.messageID, messageID)
+            put(Companion.serverHash, serverHash)
+        }
+        databaseHelper.writableDatabase.insertOrUpdate(messageHashTable, content, "${Companion.messageID} = ?", arrayOf(timestamp.toString()))
     }
 
-    fun deleteMessageServerHash(messageID: Long) {
-        val database = databaseHelper.writableDatabase
-        database.delete(messageHashTable, "${Companion.messageID} = ?", arrayOf(messageID.toString()))
+    fun deleteMessageServerHash(vararg keys: Long) {
+        keys.forEach {
+            databaseHelper.writableDatabase.delete(
+                messageHashTable, "${Companion.messageID} = ?", arrayOf(it.toString())
+            )
+        }
     }
 
-    fun deleteMessageServerHashes(messageIDs: List<Long>) {
+    fun deleteMessageServerHashes(timestampsOrMessageIDs: List<Long>) {
         val database = databaseHelper.writableDatabase
         database.delete(
             messageHashTable,
-            "${Companion.messageID} IN (${messageIDs.map { "?" }.joinToString(",")})",
-            messageIDs.map { "$it" }.toTypedArray()
+            "${Companion.messageID} IN (${timestampsOrMessageIDs.joinToString(",") { "?" }})",
+            timestampsOrMessageIDs.map { "$it" }.toTypedArray()
         )
     }
 
