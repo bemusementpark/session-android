@@ -221,7 +221,7 @@ class LokiMessageDatabase(context: Context, helper: SQLCipherOpenHelper) : Datab
 
     fun setMessageServerHash(timestamp: Long, serverHash: String) {
         val content = ContentValues(2).apply {
-            put(Companion.messageID, messageID)
+            put(Companion.messageID, timestamp)
             put(Companion.serverHash, serverHash)
         }
         databaseHelper.writableDatabase.insertOrUpdate(messageHashTable, content, "${Companion.messageID} = ?", arrayOf(timestamp.toString()))
