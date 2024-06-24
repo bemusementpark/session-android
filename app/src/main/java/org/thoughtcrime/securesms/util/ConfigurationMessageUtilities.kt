@@ -22,7 +22,11 @@ import org.session.libsession.snode.SnodeAPI
 import org.session.libsession.utilities.Address
 import org.session.libsession.utilities.GroupUtil
 import org.session.libsession.utilities.TextSecurePreferences
+import org.session.libsession.utilities.TextSecurePreferences.Companion.LAST_CONFIGURATION_SYNC_TIME
 import org.session.libsession.utilities.WindowDebouncer
+import org.session.libsession.utilities.get
+import org.session.libsession.utilities.prefs
+import org.session.libsession.utilities.set
 import org.session.libsignal.crypto.ecc.DjbECPublicKey
 import org.session.libsignal.utilities.Hex
 import org.session.libsignal.utilities.IdPrefix
@@ -61,7 +65,7 @@ object ConfigurationMessageUtilities {
             scheduleConfigSync(userPublicKey)
             return
         }
-        val lastSyncTime = TextSecurePreferences.getLastConfigurationSyncTime(context)
+        val lastSyncTime = context.prefs[LAST_CONFIGURATION_SYNC_TIME]
         val now = System.currentTimeMillis()
         if (now - lastSyncTime < 7 * 24 * 60 * 60 * 1000) return
         val contacts = ContactUtilities.getAllContacts(context).filter { recipient ->
@@ -79,7 +83,7 @@ object ConfigurationMessageUtilities {
         }
         val configurationMessage = ConfigurationMessage.getCurrent(contacts) ?: return
         MessageSender.send(configurationMessage, Address.fromSerialized(userPublicKey))
-        TextSecurePreferences.setLastConfigurationSyncTime(context, now)
+        context.prefs[LAST_CONFIGURATION_SYNC_TIME] = now
     }
 
     fun forceSyncConfigurationNowIfNeeded(context: Context): Promise<Unit, Exception> {
@@ -108,7 +112,7 @@ object ConfigurationMessageUtilities {
         }
         val configurationMessage = ConfigurationMessage.getCurrent(contacts) ?: return Promise.ofSuccess(Unit)
         val promise = MessageSender.send(configurationMessage, Destination.from(Address.fromSerialized(userPublicKey)), isSyncMessage = true)
-        TextSecurePreferences.setLastConfigurationSyncTime(context, System.currentTimeMillis())
+        context.prefs[LAST_CONFIGURATION_SYNC_TIME] = System.currentTimeMillis()
         return promise
     }
 

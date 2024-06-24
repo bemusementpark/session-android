@@ -41,7 +41,12 @@ import org.session.libsession.utilities.GroupUtil.doubleEncodeGroupID
 import org.session.libsession.utilities.ProfileKeyUtil
 import org.session.libsession.utilities.SSKEnvironment
 import org.session.libsession.utilities.TextSecurePreferences
+import org.session.libsession.utilities.TextSecurePreferences.Companion.CONFIGURATION_SYNCED
+import org.session.libsession.utilities.TextSecurePreferences.Companion.HAS_RECEIVED_LEGACY_CONFIG
+import org.session.libsession.utilities.get
+import org.session.libsession.utilities.prefs
 import org.session.libsession.utilities.recipients.Recipient
+import org.session.libsession.utilities.set
 import org.session.libsignal.crypto.ecc.DjbECPrivateKey
 import org.session.libsignal.crypto.ecc.DjbECPublicKey
 import org.session.libsignal.crypto.ecc.ECKeyPair
@@ -194,19 +199,19 @@ private fun MessageReceiver.handleDataExtractionNotification(message: DataExtrac
 private fun handleConfigurationMessage(message: ConfigurationMessage) {
     val context = MessagingModuleConfiguration.shared.context
     val storage = MessagingModuleConfiguration.shared.storage
-    if (TextSecurePreferences.getConfigurationMessageSynced(context)
+    if (context.prefs[CONFIGURATION_SYNCED]
         && !TextSecurePreferences.shouldUpdateProfile(context, message.sentTimestamp!!)) return
     val userPublicKey = storage.getUserPublicKey()
     if (userPublicKey == null || message.sender != storage.getUserPublicKey()) return
 
-    val firstTimeSync = !TextSecurePreferences.getConfigurationMessageSynced(context)
+    val firstTimeSync = !context.prefs[CONFIGURATION_SYNCED]
 
-    TextSecurePreferences.setConfigurationMessageSynced(context, true)
+    context.prefs[CONFIGURATION_SYNCED] = true
     TextSecurePreferences.setLastProfileUpdateTime(context, message.sentTimestamp!!)
     val isForceSync = TextSecurePreferences.hasForcedNewConfig(context)
     val currentTime = SnodeAPI.nowWithOffset
     if (ConfigBase.isNewConfigEnabled(isForceSync, currentTime)) {
-        TextSecurePreferences.setHasLegacyConfig(context, true)
+        context.prefs[HAS_RECEIVED_LEGACY_CONFIG] = true
         if (!firstTimeSync) return
     }
     val allClosedGroupPublicKeys = storage.getAllClosedGroupPublicKeys()

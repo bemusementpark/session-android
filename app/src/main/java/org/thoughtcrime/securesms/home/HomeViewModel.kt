@@ -25,7 +25,9 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import org.session.libsession.utilities.PreferencesFlow
 import org.session.libsession.utilities.TextSecurePreferences
+import org.session.libsession.utilities.TextSecurePreferences.Companion.HAS_HIDDEN_MESSAGE_REQUESTS
 import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.database.DatabaseContentProviders
 import org.thoughtcrime.securesms.database.ThreadDatabase
@@ -41,6 +43,7 @@ class HomeViewModel @Inject constructor(
     private val threadDb: ThreadDatabase,
     private val contentResolver: ContentResolver,
     private val prefs: TextSecurePreferences,
+    private val prefsFlow: PreferencesFlow,
     @ApplicationContextQualifier private val context: Context,
 ) : ViewModel() {
     // SharedFlow that emits whenever the user asks us to reload  the conversation
@@ -63,12 +66,6 @@ class HomeViewModel @Inject constructor(
     )
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    private fun hasHiddenMessageRequests() = TextSecurePreferences.events
-        .filter { it == TextSecurePreferences.HAS_HIDDEN_MESSAGE_REQUESTS }
-        .flowOn(Dispatchers.IO)
-        .map { prefs.hasHiddenMessageRequests() }
-        .onStart { emit(prefs.hasHiddenMessageRequests()) }
-
     private fun observeTypingStatus(): Flow<Set<Long>> =
             ApplicationContext.getInstance(context).typingStatusRepository
                     .typingThreads
@@ -78,7 +75,7 @@ class HomeViewModel @Inject constructor(
 
     private fun messageRequests() = combine(
         unapprovedConversationCount(),
-        hasHiddenMessageRequests(),
+        prefsFlow[HAS_HIDDEN_MESSAGE_REQUESTS],
         latestUnapprovedConversationTimestamp(),
         ::createMessageRequests
     )
