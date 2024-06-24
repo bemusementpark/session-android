@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -58,10 +59,16 @@ import org.session.libsession.messaging.sending_receiving.MessageSender
 import org.session.libsession.snode.SnodeAPI
 import org.session.libsession.utilities.Address
 import org.session.libsession.utilities.GroupUtil
+import org.session.libsession.utilities.PreferencesFlow
 import org.session.libsession.utilities.ProfilePictureModifiedEvent
 import org.session.libsession.utilities.TextSecurePreferences
+import org.session.libsession.utilities.TextSecurePreferences.Companion.HAS_HIDDEN_MESSAGE_REQUESTS
+import org.session.libsession.utilities.TextSecurePreferences.Companion.HAS_RECEIVED_LEGACY_CONFIG
+import org.session.libsession.utilities.TextSecurePreferences.Companion.PROFILE_NAME_PREF
+import org.session.libsession.utilities.get
 import org.session.libsession.utilities.groupByNotNull
 import org.session.libsession.utilities.recipients.Recipient
+import org.session.libsession.utilities.set
 import org.session.libsignal.utilities.Log
 import org.session.libsignal.utilities.ThreadUtils
 import org.session.libsignal.utilities.toHexString
@@ -133,6 +140,8 @@ class HomeActivity : PassphraseRequiredActionBarActivity(),
     @Inject lateinit var storage: Storage
     @Inject lateinit var groupDatabase: GroupDatabase
     @Inject lateinit var textSecurePreferences: TextSecurePreferences
+    @Inject lateinit var prefs: SharedPreferences
+    @Inject lateinit var prefsFlow: PreferencesFlow
     @Inject lateinit var configFactory: ConfigFactory
     @Inject lateinit var pushRegistry: PushRegistry
 
@@ -217,7 +226,7 @@ class HomeActivity : PassphraseRequiredActionBarActivity(),
         binding.globalSearchRecycler.adapter = globalSearchAdapter
 
         binding.configOutdatedView.setOnClickListener {
-            textSecurePreferences.setHasLegacyConfig(false)
+            prefs[HAS_RECEIVED_LEGACY_CONFIG] = false
             updateLegacyConfigView()
         }
 
@@ -235,7 +244,7 @@ class HomeActivity : PassphraseRequiredActionBarActivity(),
         // subscribe to outdated config updates, this should be removed after long enough time for device migration
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                TextSecurePreferences.events.filter { it == TextSecurePreferences.HAS_RECEIVED_LEGACY_CONFIG }.collect {
+                prefsFlow[HAS_RECEIVED_LEGACY_CONFIG].filter { it }.collect {
                     updateLegacyConfigView()
                 }
             }
@@ -275,7 +284,7 @@ class HomeActivity : PassphraseRequiredActionBarActivity(),
 
                 withContext(Dispatchers.Main) {
                     updateProfileButton()
-                    TextSecurePreferences.events.filter { it == TextSecurePreferences.PROFILE_NAME_PREF }.collect {
+                    prefsFlow[PROFILE_NAME_PREF].collect {
                         updateProfileButton()
                     }
                 }
@@ -376,7 +385,7 @@ class HomeActivity : PassphraseRequiredActionBarActivity(),
 
     private fun updateLegacyConfigView() {
         binding.configOutdatedView.isVisible = ConfigBase.isNewConfigEnabled(textSecurePreferences.hasForcedNewConfig(), SnodeAPI.nowWithOffset)
-                && textSecurePreferences.getHasLegacyConfig()
+                && prefs[HAS_RECEIVED_LEGACY_CONFIG]
     }
 
     override fun onResume() {
@@ -660,7 +669,7 @@ class HomeActivity : PassphraseRequiredActionBarActivity(),
         showSessionDialog {
             text(getString(R.string.hide_message_requests))
             button(R.string.yes) {
-                textSecurePreferences.setHasHiddenMessageRequests()
+                prefs[HAS_HIDDEN_MESSAGE_REQUESTS] = true
                 homeViewModel.tryReload()
             }
             button(R.string.no)

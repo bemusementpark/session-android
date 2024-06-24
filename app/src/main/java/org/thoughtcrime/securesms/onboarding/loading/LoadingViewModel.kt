@@ -17,7 +17,9 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.session.libsession.utilities.PreferencesFlow
 import org.session.libsession.utilities.TextSecurePreferences
+import org.session.libsession.utilities.TextSecurePreferences.Companion.CONFIGURATION_SYNCED
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -32,7 +34,8 @@ private val TIMEOUT_TIME = 15.seconds
 @OptIn(FlowPreview::class)
 @HiltViewModel
 internal class LoadingViewModel @Inject constructor(
-    val prefs: TextSecurePreferences
+    private val prefs: TextSecurePreferences,
+    private val prefsFlow: PreferencesFlow
 ): ViewModel() {
 
     private val _states = MutableStateFlow(State(TIMEOUT_TIME))
@@ -44,10 +47,8 @@ internal class LoadingViewModel @Inject constructor(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                TextSecurePreferences.events
-                    .filter { it == TextSecurePreferences.CONFIGURATION_SYNCED }
-                    .onStart { emit(TextSecurePreferences.CONFIGURATION_SYNCED) }
-                    .filter { prefs.getConfigurationMessageSynced() }
+                prefsFlow[CONFIGURATION_SYNCED]
+                    .filter { it }
                     .timeout(TIMEOUT_TIME)
                     .collectLatest { onSuccess() }
             } catch (e: Exception) {

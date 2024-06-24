@@ -1,6 +1,7 @@
 package org.thoughtcrime.securesms.onboarding.loading
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
@@ -9,6 +10,8 @@ import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.session.libsession.utilities.TextSecurePreferences
+import org.session.libsession.utilities.TextSecurePreferences.Companion.LAST_CONFIGURATION_SYNC_TIME
+import org.session.libsession.utilities.set
 import org.thoughtcrime.securesms.ApplicationContext
 import org.thoughtcrime.securesms.BaseActionBarActivity
 import org.thoughtcrime.securesms.dependencies.ConfigFactory
@@ -25,7 +28,7 @@ class LoadingActivity: BaseActionBarActivity() {
     internal lateinit var configFactory: ConfigFactory
 
     @Inject
-    internal lateinit var prefs: TextSecurePreferences
+    internal lateinit var prefs: SharedPreferences
 
     private val viewModel: LoadingViewModel by viewModels()
 
@@ -35,7 +38,7 @@ class LoadingActivity: BaseActionBarActivity() {
     }
 
     private fun register(loadFailed: Boolean) {
-        prefs.setLastConfigurationSyncTime(System.currentTimeMillis())
+        prefs[LAST_CONFIGURATION_SYNC_TIME] = System.currentTimeMillis()
 
         when {
             loadFailed -> startPickDisplayNameActivity(
