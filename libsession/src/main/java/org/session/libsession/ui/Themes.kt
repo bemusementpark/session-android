@@ -37,7 +37,7 @@ fun SessionMaterialTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colors = colors.toMaterialColors(),
+        colors = colors.materialColors,
         typography = sessionTypography,
         shapes = sessionShapes,
     ) {
@@ -45,27 +45,10 @@ fun SessionMaterialTheme(
             LocalColors provides colors,
             LocalContentColor provides colors.text,
             LocalTextSelectionColors provides colors.textSelectionColors,
-        ) {
-            content()
-        }
+            content = content
+        )
     }
 }
-
-private fun Colors.toMaterialColors() = androidx.compose.material.Colors(
-    primary = background,
-    primaryVariant = backgroundSecondary,
-    secondary = background,
-    secondaryVariant = background,
-    background = background,
-    surface = background,
-    error = danger,
-    onPrimary = text,
-    onSecondary = text,
-    onBackground = text,
-    onSurface = text,
-    onError = text,
-    isLight = isLight
-)
 
 val pillShape = RoundedCornerShape(percent = 50)
 val buttonShape = pillShape

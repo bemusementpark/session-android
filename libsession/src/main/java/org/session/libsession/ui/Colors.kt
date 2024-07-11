@@ -40,6 +40,28 @@ interface Colors {
     val qrCodeBackground: Color
     val primaryButtonFill: Color
     val primaryButtonFillText: Color
+
+    val materialColors: androidx.compose.material.Colors
+}
+
+abstract class BaseColors: Colors {
+    override val materialColors by lazy {
+        androidx.compose.material.Colors(
+            primary = background,
+            primaryVariant = backgroundSecondary,
+            secondary = background,
+            secondaryVariant = background,
+            background = background,
+            surface = background,
+            error = danger,
+            onPrimary = text,
+            onSecondary = text,
+            onBackground = text,
+            onSurface = text,
+            onError = text,
+            isLight = isLight
+        )
+    }
 }
 
 fun Colors.text(isError: Boolean): Color = if (isError) danger else text
@@ -51,7 +73,7 @@ val Colors.textSelectionColors get() = TextSelectionColors(
     backgroundColor = primary.copy(alpha = 0.5f)
 )
 
-data class ClassicDark(override val primary: Color = primaryGreen): Colors {
+data class ClassicDark(override val primary: Color = primaryGreen): BaseColors() {
     override val isLight = false
     override val danger = dangerDark
     override val disabled = disabledDark
@@ -69,7 +91,7 @@ data class ClassicDark(override val primary: Color = primaryGreen): Colors {
     override val primaryButtonFillText = Color.Black
 }
 
-data class ClassicLight(override val primary: Color = primaryGreen): Colors {
+data class ClassicLight(override val primary: Color = primaryGreen): BaseColors() {
     override val isLight = true
     override val danger = dangerLight
     override val disabled = disabledLight
@@ -87,7 +109,7 @@ data class ClassicLight(override val primary: Color = primaryGreen): Colors {
     override val primaryButtonFillText = Color.White
 }
 
-data class OceanDark(override val primary: Color = primaryBlue): Colors {
+data class OceanDark(override val primary: Color = primaryBlue): BaseColors() {
     override val isLight = false
     override val danger = dangerDark
     override val disabled = disabledDark
@@ -105,7 +127,7 @@ data class OceanDark(override val primary: Color = primaryBlue): Colors {
     override val primaryButtonFillText = Color.Black
 }
 
-data class OceanLight(override val primary: Color = primaryBlue): Colors {
+data class OceanLight(override val primary: Color = primaryBlue): BaseColors() {
     override val isLight = true
     override val danger = dangerLight
     override val disabled = disabledLight
