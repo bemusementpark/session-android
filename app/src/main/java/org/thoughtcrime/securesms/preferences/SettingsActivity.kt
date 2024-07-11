@@ -35,6 +35,9 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+import java.security.SecureRandom
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -47,8 +50,8 @@ import network.loki.messenger.R
 import network.loki.messenger.databinding.ActivitySettingsBinding
 import network.loki.messenger.libsession_util.util.UserPic
 import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.all
 import nl.komponents.kovenant.ui.alwaysUi
+import nl.komponents.kovenant.ui.failUi
 import nl.komponents.kovenant.ui.successUi
 import org.session.libsession.avatars.AvatarHelper
 import org.session.libsession.avatars.ProfileContactPhoto
@@ -89,14 +92,10 @@ import org.thoughtcrime.securesms.util.BitmapUtil
 import org.thoughtcrime.securesms.util.ConfigurationMessageUtilities
 import org.thoughtcrime.securesms.util.push
 import org.thoughtcrime.securesms.util.show
-import java.io.File
-import java.security.SecureRandom
-import javax.inject.Inject
-
-private const val TAG = "SettingsActivity"
 
 @AndroidEntryPoint
 class SettingsActivity : PassphraseRequiredActionBarActivity() {
+    private val TAG = "SettingsActivity"
 
     @Inject
     lateinit var configFactory: ConfigFactory
@@ -253,39 +252,77 @@ class SettingsActivity : PassphraseRequiredActionBarActivity() {
         displayName: String? = null
     ) {
         binding.loader.isVisible = true
-        val promises = mutableListOf<Promise<*, Exception>>()
+
         if (displayName != null) {
             prefs.setProfileName(displayName)
             configFactory.user?.setName(displayName)
         }
+
+        // Bail if we're not updating the profile picture in any way
+        if (!isUpdatingProfilePicture) return
+
         val encodedProfileKey = ProfileKeyUtil.generateEncodedProfileKey(this)
-        if (isUpdatingProfilePicture) {
-            if (profilePicture != null) {
-                promises.add(ProfilePictureUtilities.upload(profilePicture, encodedProfileKey, this))
-            } else {
+
+        val uploadProfilePicturePromise: Promise<*, Exception>
+        var removingProfilePic = false
+
+        // Adding a new profile picture?
+        if (profilePicture != null) {
+            uploadProfilePicturePromise = ProfilePictureUtilities.upload(profilePicture, encodedProfileKey, this)
+        } else {
+            // If not then we must be removing the existing one.
+            // Note: To get a promise that will resolve / sync correctly we overwrite the existing profile picture with
+            // a 0 byte image.
+            removingProfilePic = true
+            val emptyByteArray = ByteArray(0)
+            uploadProfilePicturePromise = ProfilePictureUtilities.upload(emptyByteArray, encodedProfileKey, this)
+        }
+
+        // If the upload picture promise succeeded then we hit this successUi block
+        uploadProfilePicturePromise.successUi {
+
+            // If we successfully removed the profile picture on the network then we can clear the
+            // local data - otherwise it's weird to fail the online section but it _looks_ like it
+            // worked because we cleared the local image (also it denies them the chance to retry
+            // removal if we do it locally, and may result in them having a visible profile picture
+            // everywhere EXCEPT on their own device!).
+            if (removingProfilePic) {
                 MessagingModuleConfiguration.shared.storage.clearUserPic()
             }
-        }
-        all(promises) successUi { // Do this on the UI thread so that it happens before the alwaysUi clause below
+
             val userConfig = configFactory.user
-            if (isUpdatingProfilePicture) {
-                AvatarHelper.setAvatar(this, Address.fromSerialized(prefs.getLocalNumber()!!), profilePicture)
-                prefs.setProfileAvatarId(profilePicture?.let { SecureRandom().nextInt() } ?: 0 )
+            AvatarHelper.setAvatar(this, Address.fromSerialized(prefs.getLocalNumber()!!), profilePicture)
+            prefs.setProfileAvatarId(profilePicture?.let { SecureRandom().nextInt() } ?: 0 )
                 ProfileKeyUtil.setEncodedProfileKey(this, encodedProfileKey)
                 // new config
                 val url = prefs.getProfilePictureURL()
                 val profileKey = ProfileKeyUtil.getProfileKey(this)
-                if (profilePicture == null) {
-                    userConfig?.setPic(UserPic.DEFAULT)
-                } else if (!url.isNullOrEmpty() && profileKey.isNotEmpty()) {
-                    userConfig?.setPic(UserPic(url, profileKey))
-                }
+
+            // If we have a URL and a profile key then set the user's profile picture
+            if (!url.isNullOrEmpty() && profileKey.isNotEmpty()) {
+                userConfig?.setPic(UserPic(url, profileKey))
             }
+
             if (userConfig != null && userConfig.needsDump()) {
                 configFactory.persist(userConfig, SnodeAPI.nowWithOffset)
             }
+
             ConfigurationMessageUtilities.forceSyncConfigurationNowIfNeeded(this@SettingsActivity)
-        } alwaysUi {
+        }
+
+        // Or if the promise failed to upload the new profile picture then we hit this failUi block
+        uploadProfilePicturePromise.failUi {
+            if (removingProfilePic) {
+                Log.e(TAG, "Failed to remove profile picture")
+                Toast.makeText(this@SettingsActivity, R.string.profileDisplayPictureRemoveError, Toast.LENGTH_LONG).show()
+            } else {
+                Log.e(TAG, "Failed to upload profile picture")
+                Toast.makeText(this@SettingsActivity, R.string.profileErrorUpdate, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // Finally, regardless of whether the promise succeeded or failed, we always hit this `alwaysUi` block
+        uploadProfilePicturePromise.alwaysUi {
             if (displayName != null) {
                 binding.btnGroupNameDisplay.text = displayName
             }

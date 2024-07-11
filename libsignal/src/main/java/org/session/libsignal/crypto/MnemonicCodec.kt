@@ -128,13 +128,12 @@ class MnemonicCodec(private val loadFileContents: (String) -> String) {
         decode(mnemonic = mnemonicOrHex).let(Hex::fromStringCondensed)
     } catch (decodeException: Exception) {
         // It's not a valid mnemonic, if it's pure-hexadecimal then we'll interpret it as a
-        // hexadecimal-byte encoded mnemonic.
-        if (!mnemonicOrHex.isHex()) throw decodeException
-        try {
-            Hex.fromStringCondensed(mnemonicOrHex)
-        } catch (_: Exception) {
-            throw decodeException
-        }
+        // hexadecimal-byte encoded mnemonic... unless it's 66 chars or longer, then it could be
+        // an account id.
+        mnemonicOrHex.takeIf { it.length < 66 && it.isHex() }
+            .runCatching { Hex.fromStringCondensed(this) }
+            .getOrNull()
+            ?: throw decodeException
     }
 }
 

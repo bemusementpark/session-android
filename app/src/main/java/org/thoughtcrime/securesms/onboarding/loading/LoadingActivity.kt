@@ -45,8 +45,8 @@ class LoadingActivity: BaseActionBarActivity() {
         ApplicationContext.getInstance(this).newAccount = false
 
         setComposeContent {
-            val state by viewModel.states.collectAsState()
-            LoadingScreen(state)
+            val progress by viewModel.progress.collectAsState()
+            LoadingScreen(progress)
         }
 
         lifecycleScope.launch {

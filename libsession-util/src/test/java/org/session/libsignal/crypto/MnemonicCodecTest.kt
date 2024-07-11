@@ -96,6 +96,14 @@ class MnemonicCodecTest {
 
         assertEquals("0f2ccde528622876b8f16e14db97dafc", result)
     }
+
+    @Test
+    fun `decodeMnemonicOrHexAsByteArray with account id throws`() {
+        assertThrows(InvalidWord::class.java) {
+            codec.decodeMnemonicOrHexAsByteArray("0582e1421da6f584a4795d30b654b4f25fed860afdf081075cb26a2b997e492f14").let(Hex::toStringCondensed)
+        }
+    }
+
     @Test
     fun `decodeMnemonicOrHexAsByteArray with bad hex`() {
         // throws InvalidWord as 0f2ccde528622876b8f16e14db97dafcg is not a valid word on the english wordlist.
