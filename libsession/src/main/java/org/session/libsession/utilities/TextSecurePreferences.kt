@@ -179,7 +179,7 @@ class TextSecurePreferences @Inject constructor(
     fun <T> remove(pref: Pref<T>) = sharedPreferences.set(pref, null)
     fun <T> has(pref: Pref<T>) = sharedPreferences.contains(pref.name)
     fun <T> flow(pref: Pref<T>): StateFlow<T> = callbackFlow {
-        OnSharedPreferenceChangeListener { _, _ -> trySend(sharedPreferences[pref]) }.let {
+        OnSharedPreferenceChangeListener { _, name -> if (name == pref.name) trySend(sharedPreferences[pref]) }.let {
             sharedPreferences.registerOnSharedPreferenceChangeListener(it)
 
             trySend(sharedPreferences[pref])
