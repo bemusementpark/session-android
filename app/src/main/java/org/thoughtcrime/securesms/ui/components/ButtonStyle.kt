@@ -10,9 +10,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.thoughtcrime.securesms.ui.baseBold
-import org.thoughtcrime.securesms.ui.extraSmall
-import org.thoughtcrime.securesms.ui.extraSmallBold
+import org.session.libsession.ui.baseBold
+import org.session.libsession.ui.extraSmall
+import org.session.libsession.ui.extraSmallBold
 
 interface ButtonStyle {
     @OptIn(ExperimentalMaterialApi::class)

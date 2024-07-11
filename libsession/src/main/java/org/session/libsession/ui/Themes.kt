@@ -1,6 +1,5 @@
-package org.thoughtcrime.securesms.ui
+package org.session.libsession.ui
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,19 +9,13 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import org.session.libsession.utilities.TextSecurePreferences
-import org.thoughtcrime.securesms.ui.color.ClassicDark
-import org.thoughtcrime.securesms.ui.color.ClassicLight
-import org.thoughtcrime.securesms.ui.color.Colors
-import org.thoughtcrime.securesms.ui.color.LocalColors
-import org.thoughtcrime.securesms.ui.color.OceanDark
-import org.thoughtcrime.securesms.ui.color.OceanLight
-import org.thoughtcrime.securesms.ui.color.colors
-import org.thoughtcrime.securesms.ui.color.textSelectionColors
+import org.session.libsession.utilities.prefs
 
 /**
  * Apply a Material2 compose theme based on user selections in SharedPreferences.
@@ -31,7 +24,8 @@ import org.thoughtcrime.securesms.ui.color.textSelectionColors
 fun SessionMaterialTheme(
     content: @Composable () -> Unit
 ) {
-    SessionMaterialTheme(LocalContext.current.colors()) { content() }
+    val lightDarkColors by LocalContext.current.prefs.lightDarkColors.collectAsState()
+    SessionMaterialTheme(lightDarkColors.colors()) { content() }
 }
 
 /**
@@ -72,8 +66,6 @@ private fun Colors.toMaterialColors() = androidx.compose.material.Colors(
     onError = text,
     isLight = isLight
 )
-
-@Composable private fun Context.colors() = TextSecurePreferences(this).colors()
 
 val pillShape = RoundedCornerShape(percent = 50)
 val buttonShape = pillShape

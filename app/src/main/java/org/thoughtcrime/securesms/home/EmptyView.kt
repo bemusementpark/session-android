@@ -17,14 +17,14 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import network.loki.messenger.R
 import org.thoughtcrime.securesms.ui.Divider
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.base
-import org.thoughtcrime.securesms.ui.color.Colors
-import org.thoughtcrime.securesms.ui.color.LocalColors
-import org.thoughtcrime.securesms.ui.h4
-import org.thoughtcrime.securesms.ui.h8
-import org.thoughtcrime.securesms.ui.small
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.SessionColorsParameterProvider
+import org.session.libsession.ui.base
+import org.session.libsession.ui.Colors
+import org.session.libsession.ui.LocalColors
+import org.session.libsession.ui.h4
+import org.session.libsession.ui.h8
+import org.session.libsession.ui.small
 
 @Composable
 internal fun EmptyView(newAccount: Boolean) {

@@ -82,7 +82,7 @@ import org.thoughtcrime.securesms.ui.Divider
 import org.thoughtcrime.securesms.ui.LargeItemButton
 import org.thoughtcrime.securesms.ui.LargeItemButtonWithDrawable
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.color.destructiveButtonColors
+import org.session.libsession.ui.destructiveButtonColors
 import org.thoughtcrime.securesms.ui.components.PrimaryOutlineButton
 import org.thoughtcrime.securesms.ui.components.PrimaryOutlineCopyButton
 import org.thoughtcrime.securesms.ui.contentDescription

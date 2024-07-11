@@ -18,9 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import network.loki.messenger.R
-import org.session.libsession.messaging.MessagingModuleConfiguration
 import org.session.libsession.utilities.Address
-import org.session.libsession.utilities.TextSecurePreferences
 import org.session.libsession.utilities.prefs
 import org.session.libsession.utilities.recipients.Recipient
 import org.session.libsignal.utilities.PublicKeyValidation
@@ -28,13 +26,13 @@ import org.thoughtcrime.securesms.PassphraseRequiredActionBarActivity
 import org.thoughtcrime.securesms.conversation.v2.ConversationActivityV2
 import org.thoughtcrime.securesms.database.threadDatabase
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.color.LocalColors
+import org.session.libsession.ui.LocalColors
 import org.thoughtcrime.securesms.ui.components.MaybeScanQrCode
 import org.thoughtcrime.securesms.ui.components.QrImage
 import org.thoughtcrime.securesms.ui.components.SessionTabRow
 import org.thoughtcrime.securesms.ui.contentDescription
 import org.thoughtcrime.securesms.ui.setComposeContent
-import org.thoughtcrime.securesms.ui.small
+import org.session.libsession.ui.small
 import org.thoughtcrime.securesms.util.start
 
 private val TITLES = listOf(R.string.view, R.string.scan)

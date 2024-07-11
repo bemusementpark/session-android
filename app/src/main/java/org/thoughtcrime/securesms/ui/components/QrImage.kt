@@ -33,7 +33,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import network.loki.messenger.R
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.color.LocalColors
+import org.session.libsession.ui.LocalColors
 import org.thoughtcrime.securesms.util.QRCodeUtilities
 
 @Composable

@@ -25,10 +25,10 @@ import kotlinx.coroutines.flow.emptyFlow
 import network.loki.messenger.R
 import org.thoughtcrime.securesms.ui.LoadingArcOr
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.color.Colors
-import org.thoughtcrime.securesms.ui.color.LocalColors
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.SessionColorsParameterProvider
+import org.session.libsession.ui.Colors
+import org.session.libsession.ui.LocalColors
 import org.thoughtcrime.securesms.ui.components.AppBar
 import org.thoughtcrime.securesms.ui.components.BorderlessButtonWithIcon
 import org.thoughtcrime.securesms.ui.components.MaybeScanQrCode
@@ -36,7 +36,7 @@ import org.thoughtcrime.securesms.ui.components.PrimaryOutlineButton
 import org.thoughtcrime.securesms.ui.components.SessionOutlinedTextField
 import org.thoughtcrime.securesms.ui.components.SessionTabRow
 import org.thoughtcrime.securesms.ui.contentDescription
-import org.thoughtcrime.securesms.ui.small
+import org.session.libsession.ui.small
 
 private val TITLES = listOf(R.string.enter_account_id, R.string.qrScan)
 

@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.color.LocalColors
+import org.session.libsession.ui.LocalColors
 
 private val disabledBorder @Composable get() = BorderStroke(
     width = LocalDimensions.current.borderStroke,

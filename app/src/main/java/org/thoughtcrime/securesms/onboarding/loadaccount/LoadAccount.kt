@@ -25,12 +25,12 @@ import kotlinx.coroutines.flow.Flow
 import network.loki.messenger.R
 import org.thoughtcrime.securesms.onboarding.ui.ContinuePrimaryOutlineButton
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.base
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.base
 import org.thoughtcrime.securesms.ui.components.MaybeScanQrCode
 import org.thoughtcrime.securesms.ui.components.SessionOutlinedTextField
 import org.thoughtcrime.securesms.ui.components.SessionTabRow
-import org.thoughtcrime.securesms.ui.h4
+import org.session.libsession.ui.h4
 
 private val TITLES = listOf(R.string.sessionRecoveryPassword, R.string.qrScan)
 

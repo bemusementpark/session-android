@@ -16,15 +16,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import network.loki.messenger.R
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.base
-import org.thoughtcrime.securesms.ui.color.LocalColors
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.base
+import org.session.libsession.ui.LocalColors
 import org.thoughtcrime.securesms.ui.components.AppBar
 import org.thoughtcrime.securesms.ui.components.SlimOutlineButton
 import org.thoughtcrime.securesms.ui.components.SlimOutlineCopyButton
 import org.thoughtcrime.securesms.ui.components.border
 import org.thoughtcrime.securesms.ui.contentDescription
-import org.thoughtcrime.securesms.ui.small
+import org.session.libsession.ui.small
 
 @Composable
 internal fun InviteFriend(

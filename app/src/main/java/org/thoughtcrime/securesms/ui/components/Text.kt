@@ -38,13 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import network.loki.messenger.R
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.base
-import org.thoughtcrime.securesms.ui.baseBold
-import org.thoughtcrime.securesms.ui.color.LocalColors
-import org.thoughtcrime.securesms.ui.color.borders
-import org.thoughtcrime.securesms.ui.color.text
-import org.thoughtcrime.securesms.ui.color.textSecondary
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.base
+import org.session.libsession.ui.baseBold
+import org.session.libsession.ui.LocalColors
+import org.session.libsession.ui.borders
+import org.session.libsession.ui.text
+import org.session.libsession.ui.textSecondary
 import org.thoughtcrime.securesms.ui.contentDescription
 
 @Preview

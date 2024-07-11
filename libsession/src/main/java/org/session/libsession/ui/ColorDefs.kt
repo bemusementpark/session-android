@@ -1,4 +1,4 @@
-package org.thoughtcrime.securesms.ui.color
+package org.session.libsession.ui
 
 import androidx.compose.ui.graphics.Color
 

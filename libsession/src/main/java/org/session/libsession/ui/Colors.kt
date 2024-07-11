@@ -1,4 +1,4 @@
-package org.thoughtcrime.securesms.ui.color
+package org.session.libsession.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -19,9 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.base
 
 val LocalColors = staticCompositionLocalOf<Colors> { ClassicDark() }
 
@@ -219,7 +216,12 @@ data class LightDarkColors(
 /**
  * Courtesy constructor that sets [light] and [dark] based on properties.
  */
-fun LightDarkColors(isClassic: Boolean, isLight: Boolean, followSystemSettings: Boolean, primaryOrUnspecified: Color): LightDarkColors {
+fun LightDarkColors(
+    isClassic: Boolean = true,
+    isLight: Boolean = false,
+    followSystemSettings: Boolean = false,
+    primaryOrUnspecified: Color = Color.Unspecified
+): LightDarkColors {
     val primary = primaryOrUnspecified.takeOrElse { if (isClassic) primaryGreen else primaryBlue }
     val light = when {
         isLight || followSystemSettings -> if (isClassic) ClassicLight(primary) else OceanLight(primary)

@@ -8,16 +8,32 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.annotation.ArrayRes
 import androidx.annotation.StyleRes
+import androidx.compose.ui.graphics.Color
 import androidx.core.app.NotificationCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.plus
 import org.session.libsession.R
 import org.session.libsession.utilities.TextSecurePreferences.Companion.instance
+import org.session.libsession.ui.LightDarkColors
+import org.session.libsession.ui.primaryBlue
+import org.session.libsession.ui.primaryGreen
+import org.session.libsession.ui.primaryOrange
+import org.session.libsession.ui.primaryPink
+import org.session.libsession.ui.primaryPurple
+import org.session.libsession.ui.primaryRed
+import org.session.libsession.ui.primaryYellow
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -162,17 +178,22 @@ class TextSecurePreferences @Inject constructor(
     fun <T> set(pref: Pref<T>, value: T?) = sharedPreferences.set(pref, value)
     fun <T> remove(pref: Pref<T>) = sharedPreferences.set(pref, null)
     fun <T> has(pref: Pref<T>) = sharedPreferences.contains(pref.name)
-    fun <T> flow(pref: Pref<T>) = callbackFlow {
+    fun <T> flow(pref: Pref<T>): StateFlow<T> = callbackFlow {
         OnSharedPreferenceChangeListener { _, _ -> trySend(sharedPreferences[pref]) }.let {
-            trySend(sharedPreferences[pref])
-
             sharedPreferences.registerOnSharedPreferenceChangeListener(it)
+
+            trySend(sharedPreferences[pref])
 
             awaitClose {
                 sharedPreferences.unregisterOnSharedPreferenceChangeListener(it)
             }
         }
-    }
+    }.stateIn(
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = sharedPreferences[pref]
+    )
+
 
     fun getConfigurationMessageSynced(): Boolean = sharedPreferences[CONFIGURATION_SYNCED]
     fun configurationMessageSyncedFlow() = flow(CONFIGURATION_SYNCED)
@@ -222,7 +243,7 @@ class TextSecurePreferences @Inject constructor(
     fun setLocalRegistrationId(registrationId: Int) = set(LOCAL_REGISTRATION_ID_PREF, registrationId)
     fun getLocalNumber(): String? = sharedPreferences[LOCAL_NUMBER_PREF]
     fun getHasLegacyConfig(): Boolean = sharedPreferences[HAS_RECEIVED_LEGACY_CONFIG]
-    fun hasLegacyConfigFlow(): Flow<Boolean> = flow(HAS_RECEIVED_LEGACY_CONFIG)
+    fun hasLegacyConfigFlow(): StateFlow<Boolean> = flow(HAS_RECEIVED_LEGACY_CONFIG)
     fun setHasLegacyConfig(newValue: Boolean) = sharedPreferences.set(HAS_RECEIVED_LEGACY_CONFIG, newValue)
     fun setLocalNumber(localNumber: String) = set(LOCAL_NUMBER_PREF, localNumber.lowercase())
     fun isEnterSendsEnabled() = sharedPreferences[ENTER_SENDS_PREF]
@@ -285,6 +306,7 @@ class TextSecurePreferences @Inject constructor(
     fun setFingerprintKeyGenerated() = set(FINGERPRINT_KEY_GENERATED, true)
 
     fun hasSelectedAccentColor() = has(SELECTED_ACCENT_COLOR)
+    fun selectedAccentColor() = flow(SELECTED_ACCENT_COLOR)
     fun getSelectedAccentColor(): String? = sharedPreferences[SELECTED_ACCENT_COLOR]
 
     @StyleRes
@@ -310,6 +332,8 @@ class TextSecurePreferences @Inject constructor(
         else -> null
     }.let { set(SELECTED_ACCENT_COLOR, it) }
 
+    val themeStyle = flow(SELECTED_STYLE)
+
     fun getThemeStyle(): String {
         migrateLegacyUiPrefIfNecessary()
         return sharedPreferences[SELECTED_STYLE]
@@ -319,6 +343,7 @@ class TextSecurePreferences @Inject constructor(
         sharedPreferences[SELECTED_STYLE] = if (themeStyle !in listOf(CLASSIC_DARK, CLASSIC_LIGHT, OCEAN_DARK, OCEAN_LIGHT)) CLASSIC_DARK else themeStyle
     }
 
+    val followSystemSettings = flow(FOLLOW_SYSTEM_SETTINGS)
     fun getFollowSystemSettings(): Boolean {
         migrateLegacyUiPrefIfNecessary()
         return sharedPreferences[FOLLOW_SYSTEM_SETTINGS]
@@ -344,6 +369,56 @@ class TextSecurePreferences @Inject constructor(
     fun clearAll() = getDefaultSharedPreferences(context).edit().clear().commit()
     fun getHidePassword() = sharedPreferences[HIDE_PASSWORD]
     fun setHidePassword(value: Boolean) = set(HIDE_PASSWORD, value)
+
+    private val isLight: StateFlow<Boolean> = themeStyle.map {
+        it in setOf(CLASSIC_LIGHT, OCEAN_LIGHT)
+    }
+    private val isClassic: StateFlow<Boolean> = themeStyle.map {
+            it in setOf(CLASSIC_DARK, CLASSIC_LIGHT)
+        }
+
+    private val primaryColor: StateFlow<Color> = selectedAccentColor().map {
+        when(it) {
+            GREEN_ACCENT -> primaryGreen
+            BLUE_ACCENT -> primaryBlue
+            PURPLE_ACCENT -> primaryPurple
+            PINK_ACCENT -> primaryPink
+            RED_ACCENT -> primaryRed
+            ORANGE_ACCENT -> primaryOrange
+            YELLOW_ACCENT -> primaryYellow
+            else -> Color.Unspecified
+        }
+    }
+
+    val lightDarkColors: StateFlow<LightDarkColors> = combineStateFlows(
+        isClassic,
+        isLight,
+        followSystemSettings,
+        primaryColor,
+        ::LightDarkColors
+    )
 }
 
 fun <P : Preference?> PreferenceFragmentCompat.findPreference(pref: Pref<*>) = findPreference<P>(pref.name)
+
+private val scope = CoroutineScope(Dispatchers.Default) + SupervisorJob()
+
+private fun <T1, T2, T3, T4, R> combineStateFlows(
+    flow: StateFlow<T1>,
+    flow2: StateFlow<T2>,
+    flow3: StateFlow<T3>,
+    flow4: StateFlow<T4>,
+    transform: (T1, T2, T3, T4) -> R
+): StateFlow<R> = combine(flow, flow2, flow3, flow4, transform).stateIn(
+    scope = scope,
+    started = SharingStarted.WhileSubscribed(),
+    initialValue = transform(flow.value, flow2.value, flow3.value, flow4.value)
+)
+
+private fun <A, B> StateFlow<A>.map(function: (A) -> B): StateFlow<B> = kotlinx.coroutines.flow.flow {
+    collect { emit(function(it)) }
+}.stateIn(
+    scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    started = SharingStarted.WhileSubscribed(),
+    initialValue = function(value)
+)

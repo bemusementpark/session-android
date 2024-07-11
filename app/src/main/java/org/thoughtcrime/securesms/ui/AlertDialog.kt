@@ -22,7 +22,10 @@ import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import network.loki.messenger.R
-import org.thoughtcrime.securesms.ui.color.LocalColors
+import org.session.libsession.ui.LocalColors
+import org.session.libsession.ui.h7
+import org.session.libsession.ui.large
+import org.session.libsession.ui.largeBold
 
 class DialogButtonModel(
     val text: GetString,

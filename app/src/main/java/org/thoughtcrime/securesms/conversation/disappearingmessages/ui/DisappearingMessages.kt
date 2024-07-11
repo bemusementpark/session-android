@@ -22,10 +22,10 @@ import org.thoughtcrime.securesms.ui.LocalDimensions
 import org.thoughtcrime.securesms.ui.NoOpCallbacks
 import org.thoughtcrime.securesms.ui.OptionsCard
 import org.thoughtcrime.securesms.ui.RadioOption
-import org.thoughtcrime.securesms.ui.color.LocalColors
+import org.session.libsession.ui.LocalColors
 import org.thoughtcrime.securesms.ui.components.SlimOutlineButton
 import org.thoughtcrime.securesms.ui.contentDescription
-import org.thoughtcrime.securesms.ui.extraSmall
+import org.session.libsession.ui.extraSmall
 import org.thoughtcrime.securesms.ui.fadingEdges
 
 typealias ExpiryCallbacks = Callbacks<ExpiryMode>

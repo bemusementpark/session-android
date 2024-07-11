@@ -16,10 +16,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import network.loki.messenger.R
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.color.Colors
-import org.thoughtcrime.securesms.ui.h4
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.SessionColorsParameterProvider
+import org.session.libsession.ui.Colors
+import org.session.libsession.ui.h4
 
 @Preview
 @Composable

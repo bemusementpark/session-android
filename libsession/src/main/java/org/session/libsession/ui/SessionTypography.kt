@@ -1,4 +1,4 @@
-package org.thoughtcrime.securesms.ui
+package org.session.libsession.ui
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle

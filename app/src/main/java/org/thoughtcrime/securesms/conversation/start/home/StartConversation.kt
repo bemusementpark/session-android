@@ -22,15 +22,15 @@ import org.thoughtcrime.securesms.conversation.start.StartConversationDelegate
 import org.thoughtcrime.securesms.ui.Divider
 import org.thoughtcrime.securesms.ui.ItemButton
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.color.Colors
-import org.thoughtcrime.securesms.ui.color.LocalColors
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.SessionColorsParameterProvider
+import org.session.libsession.ui.Colors
+import org.session.libsession.ui.LocalColors
 import org.thoughtcrime.securesms.ui.components.AppBar
 import org.thoughtcrime.securesms.ui.components.QrImage
 import org.thoughtcrime.securesms.ui.contentDescription
-import org.thoughtcrime.securesms.ui.small
-import org.thoughtcrime.securesms.ui.xl
+import org.session.libsession.ui.small
+import org.session.libsession.ui.xl
 
 @Composable
 internal fun StartConversationScreen(

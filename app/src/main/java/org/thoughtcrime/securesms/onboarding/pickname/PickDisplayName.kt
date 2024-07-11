@@ -18,10 +18,10 @@ import network.loki.messenger.R
 import org.thoughtcrime.securesms.onboarding.OnboardingBackPressAlertDialog
 import org.thoughtcrime.securesms.onboarding.ui.ContinuePrimaryOutlineButton
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.base
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.base
 import org.thoughtcrime.securesms.ui.components.SessionOutlinedTextField
-import org.thoughtcrime.securesms.ui.h4
+import org.session.libsession.ui.h4
 
 @Preview
 @Composable

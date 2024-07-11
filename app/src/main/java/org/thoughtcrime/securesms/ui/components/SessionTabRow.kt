@@ -20,12 +20,12 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import network.loki.messenger.R
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.color.LocalColors
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.color.Colors
-import org.thoughtcrime.securesms.ui.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.color.divider
-import org.thoughtcrime.securesms.ui.h8
+import org.session.libsession.ui.LocalColors
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.Colors
+import org.session.libsession.ui.SessionColorsParameterProvider
+import org.session.libsession.ui.divider
+import org.session.libsession.ui.h8
 
 private val TITLES = listOf(R.string.sessionRecoveryPassword, R.string.qrScan)
 

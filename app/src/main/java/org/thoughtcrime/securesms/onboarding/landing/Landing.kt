@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -41,16 +40,16 @@ import org.thoughtcrime.securesms.ui.AlertDialog
 import org.thoughtcrime.securesms.ui.DialogButtonModel
 import org.thoughtcrime.securesms.ui.GetString
 import org.thoughtcrime.securesms.ui.LocalDimensions
-import org.thoughtcrime.securesms.ui.PreviewTheme
-import org.thoughtcrime.securesms.ui.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.color.Colors
-import org.thoughtcrime.securesms.ui.color.LocalColors
+import org.session.libsession.ui.PreviewTheme
+import org.session.libsession.ui.SessionColorsParameterProvider
+import org.session.libsession.ui.Colors
+import org.session.libsession.ui.LocalColors
 import org.thoughtcrime.securesms.ui.components.BorderlessHtmlButton
 import org.thoughtcrime.securesms.ui.components.PrimaryFillButton
 import org.thoughtcrime.securesms.ui.components.PrimaryOutlineButton
 import org.thoughtcrime.securesms.ui.contentDescription
-import org.thoughtcrime.securesms.ui.h4
-import org.thoughtcrime.securesms.ui.large
+import org.session.libsession.ui.h4
+import org.session.libsession.ui.large
 import kotlin.time.Duration.Companion.milliseconds
 
 @Preview
