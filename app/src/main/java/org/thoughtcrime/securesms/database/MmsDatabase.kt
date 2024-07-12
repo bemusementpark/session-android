@@ -74,38 +74,31 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
     private val earlyReadReceiptCache = EarlyReceiptCache()
     override fun getTableName() = TABLE_NAME
 
-    fun getMessageCountForThread(threadId: Long): Int {
-        val db = databaseHelper.readableDatabase
-        db.query(
-            TABLE_NAME,
-            arrayOf("COUNT(*)"),
-            "$THREAD_ID = ?",
-            arrayOf(threadId.toString()),
-            null,
-            null,
-            null
-        ).use { cursor ->
-            if (cursor.moveToFirst()) return cursor.getInt(0)
-        }
-        return 0
-    }
+    fun getMessageCountForThread(threadId: Long) = databaseHelper.readableDatabase.query(
+        TABLE_NAME,
+        arrayOf("COUNT(*)"),
+        "$THREAD_ID = ?",
+        arrayOf(threadId.toString()),
+        null,
+        null,
+        null
+    ).use { it.takeIf { it.moveToFirst() }?.getInt(0) } ?: 0
 
-    fun isOutgoingMessage(timestamp: Long): Boolean =
-        databaseHelper.writableDatabase.query(
-            TABLE_NAME,
-            arrayOf(ID, THREAD_ID, MESSAGE_BOX, ADDRESS),
-            DATE_SENT + " = ?",
-            arrayOf(timestamp.toString()),
-            null,
-            null,
-            null,
-            null
-        ).use { cursor ->
-            cursor.asSequence()
-                .map { cursor.getColumnIndexOrThrow(MESSAGE_BOX) }
-                .map(cursor::getLong)
-                .any { MmsSmsColumns.Types.isOutgoingMessageType(it) }
-        }
+    fun isOutgoingMessage(timestamp: Long): Boolean = databaseHelper.writableDatabase.query(
+        TABLE_NAME,
+        arrayOf(ID, THREAD_ID, MESSAGE_BOX, ADDRESS),
+        "$DATE_SENT = ?",
+        arrayOf(timestamp.toString()),
+        null,
+        null,
+        null,
+        null
+    ).use { cursor ->
+        cursor.asSequence()
+            .map { cursor.getColumnIndexOrThrow(MESSAGE_BOX) }
+            .map(cursor::getLong)
+            .any { MmsSmsColumns.Types.isOutgoingMessageType(it) }
+    }
 
     fun incrementReceiptCount(
         messageId: SyncMessageId,
@@ -114,74 +107,48 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         readReceipt: Boolean
     ) {
         val database = databaseHelper.writableDatabase
-        var cursor: Cursor? = null
         var found = false
-        try {
-            cursor = database.query(
-                TABLE_NAME,
-                arrayOf(ID, THREAD_ID, MESSAGE_BOX, ADDRESS),
-                "$DATE_SENT = ?",
-                arrayOf(messageId.timetamp.toString()),
-                null,
-                null,
-                null,
-                null
-            )
+
+        database.query(
+            TABLE_NAME,
+            arrayOf(ID, THREAD_ID, MESSAGE_BOX, ADDRESS),
+            "$DATE_SENT = ?",
+            arrayOf(messageId.timetamp.toString()),
+            null,
+            null,
+            null,
+            null
+        ).use { cursor ->
             while (cursor.moveToNext()) {
-                if (MmsSmsColumns.Types.isOutgoingMessageType(
-                        cursor.getLong(
-                            cursor.getColumnIndexOrThrow(
-                                MESSAGE_BOX
-                            )
-                        )
-                    )
-                ) {
-                    val theirAddress = fromSerialized(
-                        cursor.getString(
-                            cursor.getColumnIndexOrThrow(
-                                ADDRESS
-                            )
-                        )
-                    )
+                if (MmsSmsColumns.Types.isOutgoingMessageType(cursor.getLong(cursor.getColumnIndexOrThrow(MESSAGE_BOX)))) {
                     val ourAddress = messageId.address
-                    val columnName =
-                        if (deliveryReceipt) DELIVERY_RECEIPT_COUNT else READ_RECEIPT_COUNT
-                    if (ourAddress.equals(theirAddress) || theirAddress.isGroup) {
+                    val theirAddress = cursor.getString(cursor.getColumnIndexOrThrow(ADDRESS)).let(::fromSerialized)
+
+                    if (ourAddress == theirAddress || theirAddress.isGroup) {
                         val id = cursor.getLong(cursor.getColumnIndexOrThrow(ID))
                         val threadId = cursor.getLong(cursor.getColumnIndexOrThrow(THREAD_ID))
-                        val status =
-                            if (deliveryReceipt) GroupReceiptDatabase.STATUS_DELIVERED else GroupReceiptDatabase.STATUS_READ
+                        val status = if (deliveryReceipt) GroupReceiptDatabase.STATUS_DELIVERED else GroupReceiptDatabase.STATUS_READ
                         found = true
+                        val columnName = if (deliveryReceipt) DELIVERY_RECEIPT_COUNT else READ_RECEIPT_COUNT
                         database.execSQL(
-                            "UPDATE " + TABLE_NAME + " SET " +
-                                    columnName + " = " + columnName + " + 1 WHERE " + ID + " = ?",
+                            "UPDATE $TABLE_NAME SET $columnName = $columnName + 1 WHERE $ID = ?",
                             arrayOf(id.toString())
                         )
-                        get(context).groupReceiptDatabase()
-                            .update(ourAddress, id, status, timestamp)
+                        get(context).groupReceiptDatabase().update(ourAddress, id, status, timestamp)
                         get(context).threadDatabase().update(threadId, false, true)
                         notifyConversationListeners(threadId)
                     }
                 }
             }
-            if (!found) {
-                if (deliveryReceipt) earlyDeliveryReceiptCache.increment(
-                    messageId.timetamp,
-                    messageId.address
-                )
-                if (readReceipt) earlyReadReceiptCache.increment(
-                    messageId.timetamp,
-                    messageId.address
-                )
+            if (!found) messageId.run {
+                if (deliveryReceipt) earlyDeliveryReceiptCache.increment(timetamp, address)
+                if (readReceipt) earlyReadReceiptCache.increment(timetamp, address)
             }
-        } finally {
-            cursor?.close()
         }
     }
 
     fun updateSentTimestamp(messageId: Long, newTimestamp: Long, threadId: Long) {
-        val db = databaseHelper.writableDatabase
-        db.execSQL(
+        databaseHelper.writableDatabase.execSQL(
             "UPDATE $TABLE_NAME SET $DATE_SENT = ? WHERE $ID = ?",
             arrayOf(newTimestamp.toString(), messageId.toString())
         )
@@ -189,34 +156,23 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         notifyConversationListListeners()
     }
 
-    fun getThreadIdForMessage(id: Long): Long {
-        val sql = "SELECT $THREAD_ID FROM $TABLE_NAME WHERE $ID = ?"
-        val sqlArgs = arrayOf(id.toString())
-        val db = databaseHelper.readableDatabase
-        var cursor: Cursor? = null
-        return try {
-            cursor = db.rawQuery(sql, sqlArgs)
-            if (cursor != null && cursor.moveToFirst()) cursor.getLong(0) else -1
-        } finally {
-            cursor?.close()
-        }
+    fun getThreadIdForMessage(id: Long): Long = databaseHelper.readableDatabase.rawQuery(
+        "SELECT $THREAD_ID FROM $TABLE_NAME WHERE $ID = ?",
+        arrayOf(id.toString())
+    ).use {
+        it.takeIf { it.moveToFirst() }?.getLong(0) ?: -1
     }
 
-    private fun rawQuery(where: String, arguments: Array<String>?): Cursor {
-        val database = databaseHelper.readableDatabase
-        return database.rawQuery(
+    private fun rawQuery(where: String, arguments: Array<String>?): Cursor =
+        databaseHelper.readableDatabase.rawQuery(
             "SELECT " + MMS_PROJECTION.joinToString(",") + " FROM " + TABLE_NAME +
                     " LEFT OUTER JOIN " + AttachmentDatabase.TABLE_NAME + " ON (" + TABLE_NAME + "." + ID + " = " + AttachmentDatabase.TABLE_NAME + "." + AttachmentDatabase.MMS_ID + ")" +
                     " LEFT OUTER JOIN " + ReactionDatabase.TABLE_NAME + " ON (" + TABLE_NAME + "." + ID + " = " + ReactionDatabase.TABLE_NAME + "." + ReactionDatabase.MESSAGE_ID + " AND " + ReactionDatabase.TABLE_NAME + "." + ReactionDatabase.IS_MMS + " = 1)" +
                     " WHERE " + where + " GROUP BY " + TABLE_NAME + "." + ID, arguments
         )
-    }
 
-    fun getMessage(messageId: Long): Cursor {
-        val cursor = rawQuery(RAW_ID_WHERE, arrayOf(messageId.toString()))
-        setNotifyConversationListeners(cursor, getThreadIdForMessage(messageId))
-        return cursor
-    }
+    fun getMessage(messageId: Long): Cursor = rawQuery(RAW_ID_WHERE, arrayOf(messageId.toString()))
+        .also { setNotifyConversationListeners(it, getThreadIdForMessage(messageId)) }
 
     fun getRecentChatMemberIDs(threadID: Long, limit: Int): List<String> {
         val sql = """
@@ -421,19 +377,12 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
                 val quoteAuthor = cursor.getString(cursor.getColumnIndexOrThrow(QUOTE_AUTHOR))
                 val quoteText = cursor.getString(cursor.getColumnIndexOrThrow(QUOTE_BODY)) // TODO: this should be the referenced quote
                 val quoteMissing = cursor.getInt(cursor.getColumnIndexOrThrow(QUOTE_MISSING)) == 1
-                val quoteAttachments = associatedAttachments
-                    .filter { obj: DatabaseAttachment -> obj.isQuote }
+                val quoteAttachments = associatedAttachments.filter { it.isQuote }
                 val contacts = getSharedContacts(cursor, associatedAttachments)
-                val contactAttachments: Set<Attachment> =
-                    contacts.mapNotNull { obj: Contact -> obj.avatarAttachment }.toSet()
+                val contactAttachments = contacts.mapNotNull { it.avatarAttachment }.toSet()
                 val previews = getLinkPreviews(cursor, associatedAttachments)
-                val previewAttachments =
-                    previews.filter { lp: LinkPreview -> lp.getThumbnail().isPresent }
-                        .map { lp: LinkPreview -> lp.getThumbnail().get() }
-                val attachments = associatedAttachments
-                    .asSequence()
-                    .filterNot { obj: DatabaseAttachment -> obj.isQuote || contactAttachments.contains(obj) || previewAttachments.contains(obj) }
-                    .toList()
+                val previewAttachments = previews.filter { it.getThumbnail().isPresent }.map { it.getThumbnail().get() }
+                val attachments = associatedAttachments.filterNot { it.isQuote || it in contactAttachments || it in previewAttachments }
                 val recipient = Recipient.from(context, fromSerialized(address), false)
                 var networkFailures: List<NetworkFailure?>? = LinkedList()
                 var mismatches: List<IdentityKeyMismatch?>? = LinkedList()
@@ -600,12 +549,11 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         if (!contentValues.containsKey(DATE_SENT)) {
             contentValues.put(DATE_SENT, contentValues.getAsLong(DATE_RECEIVED))
         }
-        var quoteAttachments: List<Attachment?>? = LinkedList()
+        val quoteAttachments: List<Attachment> = retrieved.quote?.attachments ?: emptyList()
         if (retrieved.quote != null) {
             contentValues.put(QUOTE_ID, retrieved.quote.id)
             contentValues.put(QUOTE_AUTHOR, retrieved.quote.author.serialize())
             contentValues.put(QUOTE_MISSING, if (retrieved.quote.missing) 1 else 0)
-            quoteAttachments = retrieved.quote.attachments
         }
         if (retrieved.isPushMessage && isDuplicate(retrieved, threadId) ||
             retrieved.isMessageRequestResponse && isDuplicateMessageRequestResponse(
@@ -619,7 +567,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         val messageId = insertMediaMessage(
             retrieved.body,
             retrieved.attachments,
-            quoteAttachments!!,
+            quoteAttachments,
             retrieved.sharedContacts,
             retrieved.linkPreviews,
             contentValues,
@@ -724,12 +672,10 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
             READ_RECEIPT_COUNT,
             Stream.of(earlyReadReceipts.values).mapToLong { obj: Long -> obj }
                 .sum())
-        val quoteAttachments: MutableList<Attachment?> = LinkedList()
         if (message.outgoingQuote != null) {
             contentValues.put(QUOTE_ID, message.outgoingQuote!!.id)
             contentValues.put(QUOTE_AUTHOR, message.outgoingQuote!!.author.serialize())
             contentValues.put(QUOTE_MISSING, if (message.outgoingQuote!!.missing) 1 else 0)
-            quoteAttachments.addAll(message.outgoingQuote!!.attachments!!)
         }
         if (isDuplicate(message, threadId)) {
             Log.w(TAG, "Ignoring duplicate media message (" + message.sentTimeMillis + ")")
@@ -738,7 +684,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         val messageId = insertMediaMessage(
             message.body,
             message.attachments,
-            quoteAttachments,
+            quoteAttachments = message.outgoingQuote?.attachments?.toList() ?: emptyList(),
             message.sharedContacts,
             message.linkPreviews,
             contentValues,
@@ -781,8 +727,8 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
     @Throws(MmsException::class)
     private fun insertMediaMessage(
         body: String?,
-        attachments: List<Attachment?>,
-        quoteAttachments: List<Attachment?>,
+        attachments: List<Attachment>,
+        quoteAttachments: List<Attachment>,
         sharedContacts: List<Contact>,
         linkPreviews: List<LinkPreview>,
         contentValues: ContentValues,
@@ -790,18 +736,13 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
     ): Long {
         val db = databaseHelper.writableDatabase
         val partsDatabase = get(context).attachmentDatabase()
-        val allAttachments: MutableList<Attachment?> = LinkedList()
-        val contactAttachments =
-            Stream.of(sharedContacts).map { obj: Contact -> obj.avatarAttachment }
-                .filter { a: Attachment? -> a != null }
-                .toList()
-        val previewAttachments =
-            Stream.of(linkPreviews).filter { lp: LinkPreview -> lp.getThumbnail().isPresent }
-                .map { lp: LinkPreview -> lp.getThumbnail().get() }
-                .toList()
-        allAttachments.addAll(attachments)
-        allAttachments.addAll(contactAttachments)
-        allAttachments.addAll(previewAttachments)
+        val contactAttachments = sharedContacts.mapNotNull { it.avatarAttachment }
+        val previewAttachments = linkPreviews.mapNotNull { it.getThumbnail().orNull() }
+        val allAttachments = buildList {
+            addAll(attachments)
+            addAll(contactAttachments)
+            addAll(previewAttachments)
+        }
         contentValues.put(BODY, body)
         contentValues.put(PART_COUNT, allAttachments.size)
         db.beginTransaction()
@@ -812,8 +753,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
                 allAttachments,
                 quoteAttachments
             )
-            val serializedContacts =
-                getSerializedSharedContacts(insertedAttachments, sharedContacts)
+            val serializedContacts = getSerializedSharedContacts(insertedAttachments, sharedContacts)
             val serializedPreviews = getSerializedLinkPreviews(insertedAttachments, linkPreviews)
             if (!serializedContacts.isNullOrEmpty()) {
                 val contactValues = ContentValues()
@@ -909,8 +849,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
         queue(Runnable { attachmentDatabase.deleteAttachmentsForMessage(messageId) })
         val groupReceiptDatabase = get(context).groupReceiptDatabase()
         groupReceiptDatabase.deleteRowsForMessage(messageId)
-        val database = databaseHelper.writableDatabase
-        database!!.delete(TABLE_NAME, ID_WHERE, arrayOf(messageId.toString()))
+        databaseHelper.writableDatabase.delete(TABLE_NAME, ID_WHERE, arrayOf(messageId.toString()))
         val threadDeleted = get(context).threadDatabase().update(threadId, false, true)
         notifyConversationListeners(threadId)
         notifyStickerListeners()
@@ -958,7 +897,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
     }
 
     private fun getSerializedSharedContacts(
-        insertedAttachmentIds: Map<Attachment?, AttachmentId?>,
+        insertedAttachmentIds: Map<Attachment, AttachmentId>,
         contacts: List<Contact?>
     ): String? {
         if (contacts.isEmpty()) return null
@@ -989,7 +928,7 @@ class MmsDatabase(context: Context, databaseHelper: SQLCipherOpenHelper) : Messa
     }
 
     private fun getSerializedLinkPreviews(
-        insertedAttachmentIds: Map<Attachment?, AttachmentId?>,
+        insertedAttachmentIds: Map<Attachment, AttachmentId>,
         previews: List<LinkPreview?>
     ): String? {
         if (previews.isEmpty()) return null
