@@ -37,9 +37,10 @@ val colorSetMap = buildMap {
 fun TextSecurePreferences.getComposeTheme(): ThemeColors {
     val (colorSetString, lightOrDark) = getThemeStyle().split(".")
 
-    val colorSet = (colorSetMap[colorSetString] ?: DefaultClassicSet).copy(primary = primaryColor())
-
-    return colorSet.theme(getFollowSystemSettings(), isLight = lightOrDark == LIGHT)
+    return (colorSetMap[colorSetString] ?: DefaultClassicSet)
+        .copy(primary = primaryColor())
+        .copy(followSystemSettings = getFollowSystemSettings(), isLight = lightOrDark == LIGHT)
+        .theme()
 }
 
 fun TextSecurePreferences.primaryColor(): Color = when(getSelectedAccentColor()) {

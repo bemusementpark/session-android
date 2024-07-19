@@ -12,15 +12,17 @@ data class ThemeColorSet(
     val light: ThemeColors,
     val dark: ThemeColors
 ) {
+    fun copy(followSystemSettings: Boolean, isLight: Boolean) = takeIf { followSystemSettings }
+        ?: ThemeColorSet(
+            light = if (isLight) light else dark,
+            dark = if (isLight) light else dark,
+        )
+
     fun copy(primary: Color) = ThemeColorSet(
         light = light.withPrimary(primary),
         dark = dark.withPrimary(primary)
     )
 
     @Composable
-    fun theme(followSystemSettings: Boolean, isLight: Boolean): ThemeColors = when {
-        followSystemSettings -> if (isSystemInDarkTheme()) dark else light
-        isLight -> light
-        else -> dark
-    }
+    fun theme(): ThemeColors = if (dark == light || isSystemInDarkTheme()) dark else light
 }
