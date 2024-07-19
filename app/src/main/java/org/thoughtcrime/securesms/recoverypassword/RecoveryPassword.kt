@@ -30,7 +30,7 @@ import org.thoughtcrime.securesms.ui.theme.LocalDimensions
 import org.thoughtcrime.securesms.ui.theme.PreviewTheme
 import org.thoughtcrime.securesms.ui.theme.SessionColorsParameterProvider
 import org.thoughtcrime.securesms.ui.SessionShieldIcon
-import org.thoughtcrime.securesms.ui.theme.ThemeColors
+import org.thoughtcrime.securesms.ui.theme.Colors
 import org.thoughtcrime.securesms.ui.theme.LocalColors
 import org.thoughtcrime.securesms.ui.components.QrImage
 import org.thoughtcrime.securesms.ui.components.SlimOutlineButton
@@ -179,7 +179,7 @@ private fun HideRecoveryPasswordCell(onHide: () -> Unit = {}) {
 @Preview
 @Composable
 private fun PreviewRecoveryPasswordScreen(
-    @PreviewParameter(SessionColorsParameterProvider::class) colors: ThemeColors
+    @PreviewParameter(SessionColorsParameterProvider::class) colors: Colors
 ) {
     PreviewTheme(colors) {
         RecoveryPasswordScreen(mnemonic = "voyage  urban  toyed  maverick peculiar tuxedo penguin tree grass building listen speak withdraw terminal plane")

@@ -24,7 +24,7 @@ import org.thoughtcrime.securesms.ui.theme.LocalDimensions
 import org.thoughtcrime.securesms.ui.theme.LocalType
 import org.thoughtcrime.securesms.ui.theme.PreviewTheme
 import org.thoughtcrime.securesms.ui.theme.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.theme.ThemeColors
+import org.thoughtcrime.securesms.ui.theme.Colors
 
 private val TITLES = listOf(R.string.sessionRecoveryPassword, R.string.qrScan)
 
@@ -66,7 +66,7 @@ fun SessionTabRow(pagerState: PagerState, titles: List<Int>) {
 @androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun PreviewSessionTabRow(
-        @PreviewParameter(SessionColorsParameterProvider::class) colors: ThemeColors
+        @PreviewParameter(SessionColorsParameterProvider::class) colors: Colors
 ) {
     PreviewTheme(colors) {
         val pagerState = rememberPagerState { TITLES.size }

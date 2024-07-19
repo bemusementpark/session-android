@@ -68,7 +68,7 @@ import org.thoughtcrime.securesms.ui.theme.LocalDimensions
 import org.thoughtcrime.securesms.ui.theme.PreviewTheme
 import org.thoughtcrime.securesms.ui.theme.SessionColorsParameterProvider
 import org.thoughtcrime.securesms.ui.TitledText
-import org.thoughtcrime.securesms.ui.theme.ThemeColors
+import org.thoughtcrime.securesms.ui.theme.Colors
 import org.thoughtcrime.securesms.ui.theme.LocalColors
 import org.thoughtcrime.securesms.ui.theme.blackAlpha40
 import org.thoughtcrime.securesms.ui.theme.dangerButtonColors
@@ -312,7 +312,7 @@ fun ExpandButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 @Preview
 @Composable
 fun PreviewMessageDetails(
-    @PreviewParameter(SessionColorsParameterProvider::class) colors: ThemeColors
+    @PreviewParameter(SessionColorsParameterProvider::class) colors: Colors
 ) {
     PreviewTheme(colors) {
         MessageDetails(

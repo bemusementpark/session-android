@@ -48,13 +48,13 @@ import org.thoughtcrime.securesms.ui.theme.LocalDimensions
 import org.thoughtcrime.securesms.ui.theme.LocalType
 import org.thoughtcrime.securesms.ui.theme.PreviewTheme
 import org.thoughtcrime.securesms.ui.theme.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.theme.ThemeColors
+import org.thoughtcrime.securesms.ui.theme.Colors
 import kotlin.time.Duration.Companion.milliseconds
 
 @Preview
 @Composable
 private fun PreviewLandingScreen(
-    @PreviewParameter(SessionColorsParameterProvider::class) colors: ThemeColors
+    @PreviewParameter(SessionColorsParameterProvider::class) colors: Colors
 ) {
     PreviewTheme(colors) {
         LandingScreen({}, {}, {}, {})

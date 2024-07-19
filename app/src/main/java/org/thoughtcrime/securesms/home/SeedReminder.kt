@@ -22,7 +22,7 @@ import org.thoughtcrime.securesms.ui.theme.LocalDimensions
 import org.thoughtcrime.securesms.ui.theme.PreviewTheme
 import org.thoughtcrime.securesms.ui.theme.SessionColorsParameterProvider
 import org.thoughtcrime.securesms.ui.SessionShieldIcon
-import org.thoughtcrime.securesms.ui.theme.ThemeColors
+import org.thoughtcrime.securesms.ui.theme.Colors
 import org.thoughtcrime.securesms.ui.theme.LocalColors
 import org.thoughtcrime.securesms.ui.components.SlimPrimaryOutlineButton
 import org.thoughtcrime.securesms.ui.contentDescription
@@ -75,7 +75,7 @@ internal fun SeedReminder(startRecoveryPasswordActivity: () -> Unit) {
 @Preview
 @Composable
 private fun PreviewSeedReminder(
-    @PreviewParameter(SessionColorsParameterProvider::class) colors: ThemeColors
+    @PreviewParameter(SessionColorsParameterProvider::class) colors: Colors
 ) {
     PreviewTheme(colors) {
         SeedReminder {}

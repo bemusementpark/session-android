@@ -20,7 +20,7 @@ import org.thoughtcrime.securesms.ui.Divider
 import org.thoughtcrime.securesms.ui.theme.LocalDimensions
 import org.thoughtcrime.securesms.ui.theme.PreviewTheme
 import org.thoughtcrime.securesms.ui.theme.SessionColorsParameterProvider
-import org.thoughtcrime.securesms.ui.theme.ThemeColors
+import org.thoughtcrime.securesms.ui.theme.Colors
 import org.thoughtcrime.securesms.ui.theme.LocalColors
 import org.thoughtcrime.securesms.ui.theme.LocalType
 
@@ -70,7 +70,7 @@ internal fun EmptyView(newAccount: Boolean) {
 @Preview
 @Composable
 fun PreviewEmptyView(
-    @PreviewParameter(SessionColorsParameterProvider::class) colors: ThemeColors
+    @PreviewParameter(SessionColorsParameterProvider::class) colors: Colors
 ) {
     PreviewTheme(colors) {
         EmptyView(newAccount = false)
@@ -80,7 +80,7 @@ fun PreviewEmptyView(
 @Preview
 @Composable
 fun PreviewEmptyViewNew(
-    @PreviewParameter(SessionColorsParameterProvider::class) colors: ThemeColors
+    @PreviewParameter(SessionColorsParameterProvider::class) colors: Colors
 ) {
     PreviewTheme(colors) {
         EmptyView(newAccount = true)
