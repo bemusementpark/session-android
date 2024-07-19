@@ -32,6 +32,8 @@ interface ThemeColors {
     val qrCodeBackground: Color
     val primaryButtonFill: Color
     val primaryButtonFillText: Color
+
+    fun withPrimary(primary: Color): ThemeColors
 }
 
 // extra functions and properties that work for all themes
@@ -113,6 +115,7 @@ data class ClassicDark(override val primary: Color = primaryGreen) : ThemeColors
     override val qrCodeBackground = text
     override val primaryButtonFill = primary
     override val primaryButtonFillText = Color.Black
+    override fun withPrimary(primary: Color) = copy(primary = primary)
 }
 
 data class ClassicLight(override val primary: Color = primaryGreen) : ThemeColors {
@@ -131,6 +134,7 @@ data class ClassicLight(override val primary: Color = primaryGreen) : ThemeColor
     override val qrCodeBackground = backgroundSecondary
     override val primaryButtonFill = text
     override val primaryButtonFillText = Color.White
+    override fun withPrimary(primary: Color) = copy(primary = primary)
 }
 
 data class OceanDark(override val primary: Color = primaryBlue) : ThemeColors {
@@ -149,6 +153,7 @@ data class OceanDark(override val primary: Color = primaryBlue) : ThemeColors {
     override val qrCodeBackground = text
     override val primaryButtonFill = primary
     override val primaryButtonFillText = Color.Black
+    override fun withPrimary(primary: Color) = copy(primary = primary)
 }
 
 data class OceanLight(override val primary: Color = primaryBlue) : ThemeColors {
@@ -167,6 +172,7 @@ data class OceanLight(override val primary: Color = primaryBlue) : ThemeColors {
     override val qrCodeBackground = backgroundSecondary
     override val primaryButtonFill = text
     override val primaryButtonFillText = Color.White
+    override fun withPrimary(primary: Color) = copy(primary = primary)
 }
 
 @Preview

@@ -289,8 +289,13 @@ interface TextSecurePreferences {
         const val HIDE_PASSWORD = "pref_hide_password"
 
         const val LEGACY_PREF_KEY_SELECTED_UI_MODE = "SELECTED_UI_MODE" // this will be cleared upon launching app, for users migrating to theming build
-        const val CLASSIC_DARK = "classic.dark"
-        const val CLASSIC_LIGHT = "classic.light"
+
+        const val CLASSIC = "classic"
+        const val OCEAN = "ocean"
+        const val DARK = "dark"
+        const val LIGHT = "light"
+        const val CLASSIC_DARK = "$CLASSIC.$DARK"
+        const val CLASSIC_LIGHT = "$CLASSIC.$LIGHT"
         const val OCEAN_DARK = "ocean.dark"
         const val OCEAN_LIGHT = "ocean.light"
 
